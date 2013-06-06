@@ -41,15 +41,17 @@ var App = function() {
         ASPECT = WIDTH / HEIGHT,
         NEAR = 0.1,
         FAR = 1000,
-        defaultDistance = 100;
+        defaultDistance = 70;
 
     var CONTAINER_OPACITY_DEFAULT = 0.2; // XXX Put back to 0
     var CONTAINER_OPACITY_HOVER = 0.15;
     var CONTAINER_OPACITY_SELECTED = 0.3;
 
-    var renderer,
-        camera,
-        scene;
+    var render, renderer, scene, camera, box, box2, box_material, table,
+            table_material, balance, balance_material,
+            plinth, plinth_material, plinth_geometry;
+
+    var duck1, duck2;
 
     init();
 
@@ -67,7 +69,7 @@ var App = function() {
         renderer.clear();
 
         camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR );
-        camera.position.y = 20;
+        camera.position.y = 50;
         camera.position.z = defaultDistance;
 
         camera.lookAt( new THREE.Vector3(0,0,0) );
@@ -79,11 +81,12 @@ var App = function() {
 
         setupFingerRepresentations();
 
-        setupGround();
+        //setupGround();
+        //setupWeight();
 
-        setupBalance();
+        setupBalanceObjects();
 
-        loadItems();
+        //loadItems();
 
         setupLights();
 
@@ -179,7 +182,7 @@ var App = function() {
 
     }
 
-    function setupBalance() {
+    function setupWeight() {
 
         loader.load('models/small-weight.js', function(geometry) {
 
@@ -195,6 +198,134 @@ var App = function() {
             model.receiveShadow = true;
 
             scene.add( model );
+
+        });
+
+    }
+
+    function setupBalanceObjects() {
+
+        // Tabletop
+        table_material = Physijs.createMaterial(
+                new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/grass.png' ), ambient: 0xFFFFFF }),
+                .9, // high friction
+                .2 // low restitution
+        );
+        table_material.map.wrapS = table_material.map.wrapT = THREE.RepeatWrapping;
+        table_material.map.repeat.set( 5, 5 );
+
+        table = new Physijs.BoxMesh(
+                new THREE.CubeGeometry(80, 1, 80),
+                table_material,
+                0, // mass
+                { restitution: .2, friction: .8 }
+        );
+        table.position.y = -.5;
+        table.receiveShadow = true;
+        scene.add( table );
+
+        // Balance
+        balance_material = Physijs.createMaterial(
+                new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/wood.jpg' ), ambient: 0xFFFFFF }),
+                0, // no friction
+                0 // no restitution
+        );
+
+        balance = new Physijs.ConeMesh(
+                new THREE.CylinderGeometry(1, 10, 20, 20, 20, false),
+                balance_material,
+                0 // mass
+        );
+        scene.add( balance );
+
+        // Plinth
+        plinth_material = Physijs.createMaterial(
+                new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/plywood.jpg' ), ambient: 0xFFFFFF }),
+                .5, // medium friction
+                1 // high restitution
+        );
+        plinth_material.map.wrapS = plinth_material.map.wrapT = THREE.RepeatWrapping;
+        plinth_material.map.repeat.set( 1, .5 );
+        plinth_geometry = new THREE.CubeGeometry( 50, 1, 10 );
+        plinth = new Physijs.BoxMesh( plinth_geometry, plinth_material, 1);
+        plinth.position.y = 10.5;
+        plinth.receiveShadow = true;
+        plinth.castShadow = true;
+        scene.add( plinth );
+
+        /*
+        // Box
+        box_material = Physijs.createMaterial(
+                new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/wood.jpg' ), ambient: 0xFFFFFF }),
+                1, // high friction
+                .1 // low restitution
+        );
+
+        box = new Physijs.BoxMesh(
+                new THREE.CubeGeometry( 5, 5, 5 ),
+                box_material,
+                5 // mass
+        );
+        box.position.y = 20;
+        box.position.x = 10;
+        box.castShaddow = true;
+        scene.add( box );
+
+        // Second box
+        box2 = new Physijs.BoxMesh(
+                new THREE.CubeGeometry( 5, 5, 5 ),
+                box_material,
+                5 // mass
+        );
+        box2.position.y = 20;
+        box2.position.x = -10;
+        //box2.position.z = 1;
+        box.castShaddow = true;
+        scene.add( box2 );
+        */
+
+        // Duck 1
+        loader.load('models/RubberDucky.js', function(geometry, materials) {
+
+            //var material = new THREE.MeshFaceMaterial(materials);
+
+            var material = new THREE.MeshBasicMaterial({color: 0xFFFF66});
+
+            var model = new Physijs.BoxMesh( geometry, material, 5 );
+
+            model.scale.set(2, 2, 2);
+
+            model.position.set( 10, 20, 0 );
+
+            model.rotation.y = -Math.PI * 3/4;
+
+            //model.castShadow = true;
+            model.receiveShadow = true;
+
+            scene.add( model );
+
+        });
+
+        // Duck 2
+        loader.load('models/RubberDucky.js', function(geometry, materials) {
+
+            //var material = new THREE.MeshFaceMaterial(materials);
+
+            var material = new THREE.MeshBasicMaterial({color: 0xFFFF66});
+
+            var model = new Physijs.BoxMesh( geometry, material, 5 );
+
+            model.scale.set(2, 2, 2);
+
+            model.position.set( -10, 20, 0 );
+
+            model.rotation.y = -Math.PI * 3/4;
+
+            //model.castShadow = true;
+            model.receiveShadow = true;
+
+            scene.add( model );
+
 
         });
 
