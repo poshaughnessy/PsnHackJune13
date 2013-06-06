@@ -41,7 +41,7 @@ var App = function() {
         ASPECT = WIDTH / HEIGHT,
         NEAR = 0.1,
         FAR = 1000,
-        defaultDistance = 70;
+        defaultDistance = 50;
 
     var CONTAINER_OPACITY_DEFAULT = 0.2; // XXX Put back to 0
     var CONTAINER_OPACITY_HOVER = 0.15;
@@ -133,7 +133,7 @@ var App = function() {
 
         for( var i=0; i < 10; i++ ) {
 
-            var sphereGeometry = new THREE.CylinderGeometry(5, 5, 20);
+            var sphereGeometry = new THREE.CylinderGeometry(1.5, 1.5, 10);
 
             /*
             var fingerModel = new Physijs.CylinderMesh( sphereGeometry, new THREE.MeshLambertMaterial({color: FINGER_COLOURS[i],
@@ -253,7 +253,6 @@ var App = function() {
         plinth.castShadow = true;
         scene.add( plinth );
 
-        /*
         // Box
         box_material = Physijs.createMaterial(
                 new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/wood.jpg' ), ambient: 0xFFFFFF }),
@@ -261,6 +260,7 @@ var App = function() {
                 .1 // low restitution
         );
 
+        /*
         box = new Physijs.BoxMesh(
                 new THREE.CubeGeometry( 5, 5, 5 ),
                 box_material,
@@ -270,8 +270,10 @@ var App = function() {
         box.position.x = 10;
         box.castShaddow = true;
         scene.add( box );
+        */
 
         // Second box
+        /*
         box2 = new Physijs.BoxMesh(
                 new THREE.CubeGeometry( 5, 5, 5 ),
                 box_material,
@@ -280,26 +282,24 @@ var App = function() {
         box2.position.y = 20;
         box2.position.x = -10;
         //box2.position.z = 1;
-        box.castShaddow = true;
+        //box.castShadow = true;
         scene.add( box2 );
         */
 
         // Duck 1
-        loader.load('models/RubberDucky.js', function(geometry, materials) {
+        loader.load('models/RubberDucky4.js', function(geometry, materials) {
 
-            //var material = new THREE.MeshFaceMaterial(materials);
-
-            var material = new THREE.MeshBasicMaterial({color: 0xFFFF66});
+            var material = new THREE.MeshFaceMaterial(materials);
 
             var model = new Physijs.BoxMesh( geometry, material, 5 );
 
-            model.scale.set(2, 2, 2);
+            model.scale.set(3, 3, 3);
 
             model.position.set( 10, 20, 0 );
 
-            model.rotation.y = -Math.PI * 3/4;
+            model.rotation.y = Math.PI * 1/4;
 
-            //model.castShadow = true;
+            model.castShadow = true;
             model.receiveShadow = true;
 
             scene.add( model );
@@ -307,27 +307,51 @@ var App = function() {
         });
 
         // Duck 2
-        loader.load('models/RubberDucky.js', function(geometry, materials) {
+        loader.load('models/RubberDucky4.js', function(geometry, materials) {
 
-            //var material = new THREE.MeshFaceMaterial(materials);
+            var material = new THREE.MeshFaceMaterial(materials);
 
-            var material = new THREE.MeshBasicMaterial({color: 0xFFFF66});
+            //var material = new THREE.MeshBasicMaterial({color: 0xFFFF66});
 
             var model = new Physijs.BoxMesh( geometry, material, 5 );
 
-            model.scale.set(2, 2, 2);
+            model.scale.set(3, 3, 3);
 
             model.position.set( -10, 20, 0 );
 
-            model.rotation.y = -Math.PI * 3/4;
+            model.rotation.y = Math.PI * 1/4;
 
-            //model.castShadow = true;
+            model.castShadow = true;
             model.receiveShadow = true;
 
             scene.add( model );
 
 
         });
+
+    }
+
+    function drawBoundingBox(box, scaleX, scaleY, scaleZ) {
+
+        var length = scaleX * (box.max.x - box.min.x);
+        var height = scaleY * (box.max.y - box.min.y);
+        var depth =  scaleZ * (box.max.z - box.min.z);
+        var boundingBoxGeometry = new THREE.CubeGeometry( length, height, depth );
+        for ( var i = 0; i < boundingBoxGeometry.faces.length; i ++ )
+        {
+            boundingBoxGeometry.faces[i].color.setHex( Math.random() * 0xffffff );
+        }
+        var boundingBoxMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, vertexColors: THREE.FaceColors, transparent: true, opacity: 0.7 } );
+        var boundingBoxMesh = new THREE.Mesh( boundingBoxGeometry, boundingBoxMaterial);
+
+        /*
+        var bboxCenter = box.center();
+        boundingBoxMesh.translateX (bboxCenter.x);
+        boundingBoxMesh.translateY (bboxCenter.y);
+        boundingBoxMesh.translateZ (bboxCenter.z);
+        */
+
+        scene.add( boundingBoxMesh );
 
     }
 
