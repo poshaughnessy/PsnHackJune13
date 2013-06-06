@@ -1,8 +1,10 @@
 var App = function() {
 
-    var OFF_SCREEN_VALUE = -999;
+    var OFF_SCREEN_VALUE = -999,
+        DEFAULT_FINGER_POS = {x: OFF_SCREEN_VALUE, y: OFF_SCREEN_VALUE, z: OFF_SCREEN_VALUE},
+        DEFAULT_FINGER_ROT = {x: Math.PI * -3/4, y: 0, z: 0};
 
-    var indexFingerModel;
+    var fingerModels = [];
 
     var hoveredItem;
     var selectedItem;
@@ -62,14 +64,7 @@ var App = function() {
 
         loadItems();
 
-        setupFingerRepresentation();
-
-        // XXX
-        /*
-        test(5, 0, 0, 0);
-        test(10, -10, -10, -10);
-        test(20, 0, 20, -20);
-        */
+        setupFingerRepresentations();
 
         setupBalance();
 
@@ -98,24 +93,27 @@ var App = function() {
 
     }
 
-    function setupFingerRepresentation() {
+    function setupFingerRepresentations() {
 
-        var sphereGeometry = new THREE.CylinderGeometry(5, 5, 20);
+        for( var i=0; i < 10; i++ ) {
 
-        indexFingerModel = new THREE.Mesh( sphereGeometry, new THREE.MeshBasicMaterial({color: 0x00CC00}) );
+            var sphereGeometry = new THREE.CylinderGeometry(5, 5, 20);
 
-        // Set off-screen to start with
-        //indexFingerModel.position.set(OFF_SCREEN_VALUE, 0, 0);
+            var fingerModel = new THREE.Mesh( sphereGeometry, new THREE.MeshBasicMaterial({color: 0x00CC00}) );
 
-        indexFingerModel.position.set(0, 10, 0);
+            // Set off-screen to start with
+            fingerModel.position.set(DEFAULT_FINGER_POS.x, DEFAULT_FINGER_POS.y, DEFAULT_FINGER_POS.z);
+            fingerModel.rotation.set(DEFAULT_FINGER_ROT.x, DEFAULT_FINGER_ROT.y, DEFAULT_FINGER_ROT.z);
 
-        indexFingerModel.rotation.x = Math.PI * -3/4;
+            fingerModel.castShadow = true;
 
-        indexFingerModel.castShadow = true;
+            fingerModels[i] = fingerModel;
 
-        console.log('adding to scene', indexFingerModel);
+            console.log('adding finger model ' + i + ' to scene', fingerModel);
 
-        scene.add( indexFingerModel );
+            scene.add( fingerModel );
+
+        }
 
     }
 
@@ -241,20 +239,13 @@ var App = function() {
 
         //console.log('leap control', frame);
 
-        updateFingerRepresentation(frame);
+        updateFingerRepresentations(frame);
 
         doItemInteractions();
 
     }
 
-    function updateFingerRepresentation(frame) {
-
-        // Off-screen by default
-        //var fingerPos = {x: OFF_SCREEN_VALUE, y: OFF_SCREEN_VALUE, z: OFF_SCREEN_VALUE};
-        // XXX
-        var fingerPos = {x: 0, y: 0, z: 0};
-
-        //console.log('frame.pointables', frame.pointables);
+    function updateFingerRepresentations(frame) {
 
         if( frame.pointables != undefined && frame.pointables.length > 0 ) {
 
@@ -262,86 +253,78 @@ var App = function() {
 
             if( pointables.length > 0 ) {
 
-                var pointable = pointables[0];
+                for( var i=0; i < pointables.length; i++ ) {
 
-                //console.log(pointable);
+                    // Defaults
 
-                var direction = pointable.direction;
+                    var fingerPos = DEFAULT_FINGER_POS;
 
-                console.log('direction', direction);
-                console.log('direction angleTo', direction.angleTo);
+                    var fingerRot = new THREE.Vector3(DEFAULT_FINGER_ROT.x, DEFAULT_FINGER_ROT.y, DEFAULT_FINGER_ROT.z);
 
-                var vec = new THREE.Vector3(direction.x, direction.y, direction.z);
+                    var pointable = pointables[i];
 
-                /*
-                indexFingerModel.rotation.y = direction.x * Math.PI;
-                indexFingerModel.rotation.z = direction.y * Math.PI;
-                indexFingerModel.rotation.x = direction.z * Math.PI;
-                */
+                    var direction = pointable.direction;
 
-                // XXX
-                var axis = new THREE.Vector3( 0, 1, 0 ).crossSelf( vec );
+                    //console.log('direction', direction);
+                    //console.log('direction angleTo', direction.angleTo);
 
-                var radians = Math.acos( new THREE.Vector3( 0, 1, 0 ).dot( vec.clone().normalize() ) );
+                    var vec = new THREE.Vector3(direction.x, direction.y, direction.z);
 
-                var matrix = new THREE.Matrix4().makeRotationAxis( axis.normalize(), radians );
+                    var axis = new THREE.Vector3( 0, 1, 0 ).crossSelf( vec );
+                    var radians = Math.acos( new THREE.Vector3( 0, 1, 0 ).dot( vec.clone().normalize() ) );
+                    var matrix = new THREE.Matrix4().makeRotationAxis( axis.normalize(), radians );
 
-                indexFingerModel.rotation.setEulerFromRotationMatrix( matrix, THREE.Object3D.defaultEulerOrder );
+                    fingerRot.setEulerFromRotationMatrix( matrix, THREE.Object3D.defaultEulerOrder );
 
-                console.log('rotation', indexFingerModel.rotation);
+                    var tipPosition = pointable.tipPosition;
 
-                // XXX
+                    if( tipPosition ) {
 
+                        console.log('tipPosition', tipPosition);
 
-                var tipPosition = pointable.tipPosition;
+                        var x = tipPosition.x,
+                                y = tipPosition.y,
+                                z = tipPosition.z;
 
-                if( tipPosition ) {
+                        // Coordinates are millimetres from centre
+                        // Number range is apparently: 290 to -290 for X, 14 to 720 for Y, 230 to -330 for Z
+                        // According to:
+                        // https://developer.leapmotion.com/forums/forums/10/topics/range-of-possible-values-via-js
 
-                    console.log('tipPosition', tipPosition);
+                        // Just doing a rough translation to our 3D scene coordinates for now...
 
-                    //console.log(tipPosition);
+                        fingerPos = {x: x / 5, y: Math.max(0, (y-100) / 5), z: (z+10) / 5};
 
-                    var x = tipPosition.x,
-                        y = tipPosition.y,
-                        z = tipPosition.z;
+                    }
 
-                    // Coordinates are millimetres from centre
-                    // Number range is apparently: 290 to -290 for X, 14 to 720 for Y, 230 to -330 for Z
-                    // According to:
-                    // https://developer.leapmotion.com/forums/forums/10/topics/range-of-possible-values-via-js
+                    // Set
 
-                    // Just doing a rough translation to our 3D scene coordinates for now...
+                    if( fingerPos.x != 0 || fingerPos.y != 0 || fingerPos.z != 0 ) {
+                        console.log( 'fingerPos', fingerPos );
+                        console.log( 'fingerRot', fingerRot );
+                    }
 
-                    fingerPos = {x: x / 5, y: Math.max(0, (y-100) / 5), z: (z+10) / 5};
+                    fingerModels[i].position.set( fingerPos.x, fingerPos.y, fingerPos.z );
+                    fingerModels[i].rotation.set( fingerRot.x, fingerRot.y, fingerRot.z );
 
                 }
+
+                // Reset fingers we don't have data for
+                for( var j=pointables.length; j < 10; j++ ) {
+
+                    fingerModels[j].position.set( DEFAULT_FINGER_POS.x, DEFAULT_FINGER_POS.y, DEFAULT_FINGER_POS.z );
+                    fingerModels[j].rotation.set( DEFAULT_FINGER_ROT.x, DEFAULT_FINGER_ROT.y, DEFAULT_FINGER_ROT.z );
+                }
+
             }
 
         }
-
-        //console.log('finger pos', fingerPos.x, fingerPos.y, fingerPos.z);
-
-        if( fingerPos.x != 0 || fingerPos.y != 0 || fingerPos.z != 0 ) {
-            console.log('fingerPos', fingerPos);
-        }
-
-        indexFingerModel.position.set(fingerPos.x, fingerPos.y, fingerPos.z);
-
-        /*
-        if( fingerPos.y >= ON_TRAY_Y ) {
-            indexFingerModel.material.color = new THREE.Color(0x00CC00);
-        } else {
-            indexFingerModel.material.color = new THREE.Color(0xCC0000);
-        }
-        */
-
-        // JS SDK doesn't appear to give us the finger rotation yet...
-        //indexFingerModel.rotation.set(...);
 
     }
 
     function doItemInteractions() {
 
+        /*
         var fingerPos = indexFingerModel.position;
 
         // If no selected object
@@ -349,7 +332,6 @@ var App = function() {
 
             var touchingItem = undefined;
 
-            /*
             // Detect whether finger is over/under an object
             if( fingerPos.x != OFF_SCREEN_VALUE && fingerPos.y >= ON_TRAY_Y ) {
 
@@ -384,7 +366,6 @@ var App = function() {
                 }
 
             }
-            */
 
             if( touchingItem != undefined ) {
 
@@ -475,6 +456,7 @@ var App = function() {
             }
 
         }
+        */
 
     }
 
