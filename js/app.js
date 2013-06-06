@@ -67,8 +67,10 @@ var App = function() {
         renderer.clear();
 
         camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR );
-        camera.position.y = 10;
+        camera.position.y = 20;
         camera.position.z = defaultDistance;
+
+        camera.lookAt( new THREE.Vector3(0,0,0) );
 
         // Attach the renderer's canvas element to the container
         $('#container').append(renderer.domElement);
@@ -81,8 +83,7 @@ var App = function() {
 
         setupBalance();
 
-        // XXX REMOVED TEMPORARILY
-        //loadItems();
+        loadItems();
 
         setupLights();
 
@@ -131,7 +132,12 @@ var App = function() {
 
             var sphereGeometry = new THREE.CylinderGeometry(5, 5, 20);
 
+            /*
             var fingerModel = new Physijs.CylinderMesh( sphereGeometry, new THREE.MeshLambertMaterial({color: FINGER_COLOURS[i],
+                ambient: 0xdadada}) );
+            */
+
+            var fingerModel = new THREE.Mesh( sphereGeometry, new THREE.MeshLambertMaterial({color: FINGER_COLOURS[i],
                 ambient: 0xdadada}) );
 
             // Set off-screen to start with
@@ -144,8 +150,7 @@ var App = function() {
 
             console.log('adding finger model ' + i + ' to scene', fingerModel);
 
-            // XXX REMOVED TEMPORARILY
-            //scene.add( fingerModel );
+            scene.add( fingerModel );
 
         }
 
@@ -156,9 +161,15 @@ var App = function() {
         // Ground
         var ground_geometry = new THREE.PlaneGeometry( 300, 300, 100, 100 );
 
+        var ground_material = Physijs.createMaterial(
+                new THREE.MeshBasicMaterial({color: 0xCCCCCC}),
+                .4, // low friction
+                .6 // high restitution
+        );
+
         var ground = new Physijs.PlaneMesh(
                 ground_geometry,
-                new THREE.MeshBasicMaterial({color: 0xCCCCCC}),
+                ground_material,
                 0 // mass
         );
         ground.rotation.x = -Math.PI / 2;
@@ -179,7 +190,7 @@ var App = function() {
 
             model.scale.set(1.5, 1.5, 1.5);
 
-            model.position.set( 0, 50, 0 );
+            model.position.set( 0, 50, 30 );
 
             model.receiveShadow = true;
 
@@ -223,9 +234,6 @@ var App = function() {
 
         scene.add( spotLight3 );
 
-        // Set method that gets called with every Leap frame
-        Leap.loop(update);
-
     }
 
     function start() {
@@ -239,6 +247,9 @@ var App = function() {
 
         requestAnimationFrame( render );
         scene.simulate();
+
+        // Set method that gets called with every Leap frame
+        Leap.loop(update);
 
     }
 
@@ -330,7 +341,7 @@ var App = function() {
 
                 if( tipPosition ) {
 
-                    //console.log('tipPosition', tipPosition);
+                    console.log('tipPosition', tipPosition);
 
                     var x = tipPosition.x,
                             y = tipPosition.y,
@@ -348,12 +359,10 @@ var App = function() {
                 }
 
                 // XXX
-                /*
                 if( fingerPos.x != 0 || fingerPos.y != 0 || fingerPos.z != 0 ) {
                     console.log( 'fingerPos', fingerPos );
                     console.log( 'fingerRot', fingerRot );
                 }
-                */
 
                 fingerModels[i].position.set( fingerPos.x, fingerPos.y, fingerPos.z );
                 fingerModels[i].rotation.set( fingerRot.x, fingerRot.y, fingerRot.z );
@@ -606,10 +615,10 @@ var App = function() {
                     height: 10,
                     depth: 10,
                     x: 0,
-                    y: 0,
-                    z: 0,
+                    y: 10,
+                    z: 20,
                     scale: 5,
-                    rotation: {x: 0, y: -Math.PI / 4, z: 0}
+                    rotation: {x: 0, y: -Math.PI * 3/4, z: 0}
                 });
 
     }
@@ -620,9 +629,9 @@ var App = function() {
 
             //var material = new THREE.MeshFaceMaterial(materials);
 
-            var material = new THREE.MeshBasicMaterial({color: 0xFFFF66})
+            var material = new THREE.MeshBasicMaterial({color: 0xFFFF66});
 
-            var model = new THREE.Mesh( geometry, material );
+            var model = new Physijs.BoxMesh( geometry, material, 1 );
 
             model.scale.set(props.scale, props.scale, props.scale);
 
@@ -637,6 +646,7 @@ var App = function() {
 
             // Create a simple container object for collision detection purposes
 
+            /*
             var containerGeo = new THREE.CubeGeometry(props.width, props.height, props.depth);
 
             var container = new Physijs.BoxMesh( containerGeo,
@@ -647,7 +657,7 @@ var App = function() {
             container.position.set( props.x, props.y, props.z );
 
             scene.add(container);
-
+            */
 
             modelLoaded();
 
