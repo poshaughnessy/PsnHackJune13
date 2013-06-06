@@ -2,7 +2,19 @@ var App = function() {
 
     var OFF_SCREEN_VALUE = -999,
         DEFAULT_FINGER_POS = {x: OFF_SCREEN_VALUE, y: OFF_SCREEN_VALUE, z: OFF_SCREEN_VALUE},
-        DEFAULT_FINGER_ROT = {x: Math.PI * -3/4, y: 0, z: 0};
+        DEFAULT_FINGER_ROT = {x: Math.PI * -3/4, y: 0, z: 0},
+        FINGER_COLOURS = [
+            0xff5555,
+            0x55ff55,
+            0x55ffff,
+            0xffff55,
+            0x5555ff,
+            0xff55ff,
+            0xffffff,
+            0x0000aa,
+            0x00aa00,
+            0x00aaaa
+        ];
 
     var fingerModels = [];
 
@@ -11,7 +23,7 @@ var App = function() {
 
     var hoverTime = 0;
 
-    var weightItems = [];
+    var items = [];
 
     var loader = new THREE.JSONLoader();
 
@@ -31,7 +43,7 @@ var App = function() {
         FAR = 1000,
         defaultDistance = 100;
 
-    var CONTAINER_OPACITY_DEFAULT = 0;
+    var CONTAINER_OPACITY_DEFAULT = 0.2; // XXX Put back to 0
     var CONTAINER_OPACITY_HOVER = 0.15;
     var CONTAINER_OPACITY_SELECTED = 0.3;
 
@@ -55,18 +67,22 @@ var App = function() {
         renderer.clear();
 
         camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR );
+        camera.position.y = 10;
         camera.position.z = defaultDistance;
-
-        scene = new THREE.Scene();
 
         // Attach the renderer's canvas element to the container
         $('#container').append(renderer.domElement);
 
-        loadItems();
+        setupPhysicsAndScene();
 
         setupFingerRepresentations();
 
+        setupGround();
+
         setupBalance();
+
+        // XXX REMOVED TEMPORARILY
+        //loadItems();
 
         setupLights();
 
@@ -93,13 +109,30 @@ var App = function() {
 
     }
 
+    function setupPhysicsAndScene() {
+
+        Physijs.scripts.worker = 'js/lib/physijs_worker.js';
+        Physijs.scripts.ammo = 'ammo.js';
+
+        scene = new Physijs.Scene;
+        scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
+        scene.addEventListener('update',
+                function() {
+                    //console.log('simulate');
+                    scene.simulate(); // 0.1, 20 );
+                }
+        );
+
+    }
+
     function setupFingerRepresentations() {
 
         for( var i=0; i < 10; i++ ) {
 
             var sphereGeometry = new THREE.CylinderGeometry(5, 5, 20);
 
-            var fingerModel = new THREE.Mesh( sphereGeometry, new THREE.MeshBasicMaterial({color: 0x00CC00}) );
+            var fingerModel = new Physijs.CylinderMesh( sphereGeometry, new THREE.MeshLambertMaterial({color: FINGER_COLOURS[i],
+                ambient: 0xdadada}) );
 
             // Set off-screen to start with
             fingerModel.position.set(DEFAULT_FINGER_POS.x, DEFAULT_FINGER_POS.y, DEFAULT_FINGER_POS.z);
@@ -111,34 +144,29 @@ var App = function() {
 
             console.log('adding finger model ' + i + ' to scene', fingerModel);
 
-            scene.add( fingerModel );
+            // XXX REMOVED TEMPORARILY
+            //scene.add( fingerModel );
 
         }
 
     }
 
-    /*
-    function test(s, x, y, z) {
+    function setupGround() {
 
-        var aGeometry = new THREE.CylinderGeometry(s, s, s);
+        // Ground
+        var ground_geometry = new THREE.PlaneGeometry( 300, 300, 100, 100 );
 
-        aModel = new THREE.Mesh( aGeometry, new THREE.MeshNormalMaterial() );
+        var ground = new Physijs.PlaneMesh(
+                ground_geometry,
+                new THREE.MeshBasicMaterial({color: 0xCCCCCC}),
+                0 // mass
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
 
-        // Set off-screen to start with
-        //aModel.position.set(OFF_SCREEN_VALUE, 0, 0);
-
-        aModel.position.set(x, y, z);
-
-        //aModel.rotation.x = Math.PI * -3/4;
-
-        aModel.castShadow = true;
-
-        console.log('adding to scene', aModel);
-
-        scene.add( aModel );
+        scene.add( ground );
 
     }
-    */
 
     function setupBalance() {
 
@@ -147,11 +175,11 @@ var App = function() {
             var weightMaterial = new THREE.MeshLambertMaterial( { color: 0x8a8181, ambient: 0xdadada,
                 reflectivity: 0.3 } );
 
-            var model = new THREE.Mesh( geometry, weightMaterial );
+            var model = new Physijs.BoxMesh( geometry, weightMaterial, 10 );
 
-            model.scale.set(1.5, 1, 1.5);
+            model.scale.set(1.5, 1.5, 1.5);
 
-            model.position.set( -15, -0.55, 10 );
+            model.position.set( 0, 50, 0 );
 
             model.receiveShadow = true;
 
@@ -170,12 +198,30 @@ var App = function() {
 
         var spotLight = new THREE.SpotLight(0xFFFFFF, 3.0, 300);
 
-        spotLight.position.set( 0, 150, 0 ); // x, y, z
+        spotLight.position.set( 0, 250, 0 ); // x, y, z
         spotLight.target.position.set( 0, 0, 0 );
         spotLight.castShadow = true;
         spotLight.shadowDarkness = 0.2;
 
         scene.add( spotLight );
+
+        var spotLight2 = new THREE.SpotLight(0xFFFFFF, 3.0, 300);
+
+        spotLight2.position.set( 0, -250, 0 ); // x, y, z
+        spotLight2.target.position.set( 0, 0, 0 );
+        spotLight2.castShadow = true;
+        spotLight2.shadowDarkness = 0.2;
+
+        scene.add( spotLight2 );
+
+        var spotLight3 =  new THREE.SpotLight(0xFFFFFF, 5.0, 300);
+
+        spotLight3.position.set( 0, 0, 250 ); // x, y, z
+        spotLight3.target.position.set( 0, 0, 0 );
+        spotLight3.castShadow = true;
+        spotLight3.shadowDarkness = 0.2;
+
+        scene.add( spotLight3 );
 
         // Set method that gets called with every Leap frame
         Leap.loop(update);
@@ -190,6 +236,9 @@ var App = function() {
         document.getElementById('welcome').style.display = 'none';
         document.getElementById('info').style.display = 'block';
         */
+
+        requestAnimationFrame( render );
+        scene.simulate();
 
     }
 
@@ -213,14 +262,17 @@ var App = function() {
 
         leapControl(frame);
 
-        render();
+        //render();
 
     }
 
-    // Renders the frame and keeps the camera looking at the centre of the scene
     function render() {
-        camera.lookAt( scene.position );
+
+        requestAnimationFrame( render );
+
+        //camera.lookAt( scene.position );
         renderer.render( scene, camera );
+
     }
 
     function onWindowResize(event) {
@@ -247,76 +299,74 @@ var App = function() {
 
     function updateFingerRepresentations(frame) {
 
+        var numPointables = 0;
+
         if( frame.pointables != undefined && frame.pointables.length > 0 ) {
 
             var pointables = frame.pointables;
 
-            if( pointables.length > 0 ) {
+            numPointables = pointables.length;
 
-                for( var i=0; i < pointables.length; i++ ) {
+            for( var i=0; i < numPointables; i++ ) {
 
-                    // Defaults
+                // Defaults
 
-                    var fingerPos = DEFAULT_FINGER_POS;
+                var fingerPos = DEFAULT_FINGER_POS;
+                var fingerRot = new THREE.Vector3(DEFAULT_FINGER_ROT.x, DEFAULT_FINGER_ROT.y, DEFAULT_FINGER_ROT.z);
 
-                    var fingerRot = new THREE.Vector3(DEFAULT_FINGER_ROT.x, DEFAULT_FINGER_ROT.y, DEFAULT_FINGER_ROT.z);
+                var pointable = pointables[i];
 
-                    var pointable = pointables[i];
+                var direction = pointable.direction;
 
-                    var direction = pointable.direction;
+                var vec = new THREE.Vector3(direction.x, direction.y, direction.z);
 
-                    //console.log('direction', direction);
-                    //console.log('direction angleTo', direction.angleTo);
+                var axis = new THREE.Vector3( 0, 1, 0 ).cross( vec );
+                var radians = Math.acos( new THREE.Vector3( 0, 1, 0 ).dot( vec.clone().normalize() ) );
+                var matrix = new THREE.Matrix4().makeRotationAxis( axis.normalize(), radians );
 
-                    var vec = new THREE.Vector3(direction.x, direction.y, direction.z);
+                fingerRot.setEulerFromRotationMatrix( matrix, THREE.Object3D.defaultEulerOrder );
 
-                    var axis = new THREE.Vector3( 0, 1, 0 ).crossSelf( vec );
-                    var radians = Math.acos( new THREE.Vector3( 0, 1, 0 ).dot( vec.clone().normalize() ) );
-                    var matrix = new THREE.Matrix4().makeRotationAxis( axis.normalize(), radians );
+                var tipPosition = pointable.tipPosition;
 
-                    fingerRot.setEulerFromRotationMatrix( matrix, THREE.Object3D.defaultEulerOrder );
+                if( tipPosition ) {
 
-                    var tipPosition = pointable.tipPosition;
+                    //console.log('tipPosition', tipPosition);
 
-                    if( tipPosition ) {
+                    var x = tipPosition.x,
+                            y = tipPosition.y,
+                            z = tipPosition.z;
 
-                        console.log('tipPosition', tipPosition);
+                    // Coordinates are millimetres from centre
+                    // Number range is apparently: 290 to -290 for X, 14 to 720 for Y, 230 to -330 for Z
+                    // According to:
+                    // https://developer.leapmotion.com/forums/forums/10/topics/range-of-possible-values-via-js
 
-                        var x = tipPosition.x,
-                                y = tipPosition.y,
-                                z = tipPosition.z;
+                    // Just doing a rough translation to our 3D scene coordinates for now...
 
-                        // Coordinates are millimetres from centre
-                        // Number range is apparently: 290 to -290 for X, 14 to 720 for Y, 230 to -330 for Z
-                        // According to:
-                        // https://developer.leapmotion.com/forums/forums/10/topics/range-of-possible-values-via-js
-
-                        // Just doing a rough translation to our 3D scene coordinates for now...
-
-                        fingerPos = {x: x / 5, y: Math.max(0, (y-100) / 5), z: (z+10) / 5};
-
-                    }
-
-                    // Set
-
-                    if( fingerPos.x != 0 || fingerPos.y != 0 || fingerPos.z != 0 ) {
-                        console.log( 'fingerPos', fingerPos );
-                        console.log( 'fingerRot', fingerRot );
-                    }
-
-                    fingerModels[i].position.set( fingerPos.x, fingerPos.y, fingerPos.z );
-                    fingerModels[i].rotation.set( fingerRot.x, fingerRot.y, fingerRot.z );
+                    fingerPos = {x: x / 5, y: Math.max(0, (y-100) / 5), z: (z+10) / 5};
 
                 }
 
-                // Reset fingers we don't have data for
-                for( var j=pointables.length; j < 10; j++ ) {
-
-                    fingerModels[j].position.set( DEFAULT_FINGER_POS.x, DEFAULT_FINGER_POS.y, DEFAULT_FINGER_POS.z );
-                    fingerModels[j].rotation.set( DEFAULT_FINGER_ROT.x, DEFAULT_FINGER_ROT.y, DEFAULT_FINGER_ROT.z );
+                // XXX
+                /*
+                if( fingerPos.x != 0 || fingerPos.y != 0 || fingerPos.z != 0 ) {
+                    console.log( 'fingerPos', fingerPos );
+                    console.log( 'fingerRot', fingerRot );
                 }
+                */
+
+                fingerModels[i].position.set( fingerPos.x, fingerPos.y, fingerPos.z );
+                fingerModels[i].rotation.set( fingerRot.x, fingerRot.y, fingerRot.z );
 
             }
+
+        }
+
+        // Reset fingers we don't have data for
+        for( var j=numPointables; j < 10; j++ ) {
+
+            fingerModels[j].position.set( DEFAULT_FINGER_POS.x, DEFAULT_FINGER_POS.y, DEFAULT_FINGER_POS.z );
+            fingerModels[j].rotation.set( DEFAULT_FINGER_ROT.x, DEFAULT_FINGER_ROT.y, DEFAULT_FINGER_ROT.z );
 
         }
 
@@ -351,9 +401,9 @@ var App = function() {
                     var collision = collisions[0];
 
                     // Identify the collision object
-                    for( var j=0; j < weightItems.length; j++ ) {
+                    for( var j=0; j < items.length; j++ ) {
 
-                        var trayItem = weightItems[j];
+                        var trayItem = items[j];
 
                         if( trayItem.containerModel == collision.object ) {
 
@@ -490,9 +540,10 @@ var App = function() {
 
         console.log('update highlights');
 
-        for( var i=0; i < weightItems.length; i++ ) {
+        /*
+        for( var i=0; i < items.length; i++ ) {
 
-            var trayItem = weightItems[i];
+            var trayItem = items[i];
 
             if( trayItem.modelsSet ) {
 
@@ -512,6 +563,7 @@ var App = function() {
             }
 
         }
+        */
 
     }
 
@@ -519,8 +571,8 @@ var App = function() {
 
         var containerObjects = [];
 
-        for( var i=0; i < weightItems.length; i++ ) {
-            var trayItem = weightItems[i];
+        for( var i=0; i < items.length; i++ ) {
+            var trayItem = items[i];
             containerObjects.push(trayItem.containerModel);
         }
 
@@ -537,16 +589,69 @@ var App = function() {
 
                 var trayItem = new TrayItem(key, val);
 
-                weightItems.push(trayItem);
+                items.push(trayItem);
 
             });
 
-            for( var i=0; i < weightItems.length; i++ ) {
-                loadModel( weightItems[i] );
+            for( var i=0; i < items.length; i++ ) {
+                loadModel( items[i] );
             }
 
         });
         */
+
+        loadItem('RubberDucky',
+                {
+                    width: 10,
+                    height: 10,
+                    depth: 10,
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    scale: 5,
+                    rotation: {x: 0, y: -Math.PI / 4, z: 0}
+                });
+
+    }
+
+    function loadItem(id, props) {
+
+        loader.load('models/'+id+'.js', function(geometry, materials) {
+
+            //var material = new THREE.MeshFaceMaterial(materials);
+
+            var material = new THREE.MeshBasicMaterial({color: 0xFFFF66})
+
+            var model = new THREE.Mesh( geometry, material );
+
+            model.scale.set(props.scale, props.scale, props.scale);
+
+            model.position.set( props.x, props.y, props.z );
+
+            model.rotation.set( props.rotation.x, props.rotation.y, props.rotation.z );
+
+            model.receiveShadow = true;
+
+            scene.add( model );
+
+
+            // Create a simple container object for collision detection purposes
+
+            var containerGeo = new THREE.CubeGeometry(props.width, props.height, props.depth);
+
+            var container = new Physijs.BoxMesh( containerGeo,
+                    new THREE.MeshLambertMaterial({color: 0x00FF00, transparent: true}));
+
+            container.material.opacity = CONTAINER_OPACITY_DEFAULT;
+
+            container.position.set( props.x, props.y, props.z );
+
+            scene.add(container);
+
+
+            modelLoaded();
+
+        });
 
     }
 
@@ -557,9 +662,9 @@ var App = function() {
         /*
         $.getJSON('data/objects.json', function(data) {
 
-            for( var i=0; i < weightItems.length; i++ ) {
+            for( var i=0; i < items.length; i++ ) {
 
-                var weightItem = weightItems[i];
+                var weightItem = items[i];
 
                 weightItem.moveTo( {x: data[weightItem.id].objectProps.x,
                     y: ON_TRAY_Y,
@@ -572,12 +677,13 @@ var App = function() {
 
     }
 
+    /*
     function loadModel( weightItem ) {
 
         var filepath = 'models/'+weightItem.id+'/'+weightItem.id+'.js';
 
         // TODO container
-        /*
+        *//*
         var objectProps = weightItem.objectProps;
         var containerProps = weightItem.containerProps;
 
@@ -600,24 +706,24 @@ var App = function() {
         container.position.set( containerProps.x, 0, containerProps.z );
 
         scene.add(container);
-        */
+        *//*
 
         loader.load(filepath, function(geometry, materials) {
 
             var material = new THREE.MeshFaceMaterial(materials);
 
-            /*
+            *//*
             if( objectProps.replaceMaterial ) {
-            */
+            *//*
                 material = new THREE.MeshLambertMaterial( { color: 0x393939, ambient: 0x9b9b9b,
                     reflectivity: 0.3 } );
-            /*
+            *//*
             }
-            */
+            *//*
 
             var model = new THREE.Mesh( geometry, material );
 
-            /*
+            *//*
             model.position.set(objectProps.x, 0, objectProps.z);
             if( objectProps.rotationX ){
                 model.rotation.x = objectProps.rotationX;
@@ -628,29 +734,32 @@ var App = function() {
             if( objectProps.scale ) {
                 model.scale.set(objectProps.scale, objectProps.scale, objectProps.scale);
             }
-            */
+            *//*
 
             model.castShadow = true;
 
             scene.add( model );
 
-            console.log('After adding model:', weightItems);
+            console.log('After adding model:', items);
 
             modelLoaded();
 
         });
 
     }
+    */
 
     function modelLoaded() {
 
+        /*
         numLoadedModels++;
 
-        if( numLoadedModels >= weightItems.length ) {
+        if( numLoadedModels >= items.length ) {
             hasLoaded = true;
         }
 
         checkLoadedAndConnected();
+        */
 
     }
 
