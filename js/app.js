@@ -133,15 +133,19 @@ var App = function() {
 
         for( var i=0; i < 10; i++ ) {
 
-            var sphereGeometry = new THREE.CylinderGeometry(1.5, 1.5, 10);
+            var geometry = new THREE.CylinderGeometry(1.5, 1.5, 10);
+
+            var material = Physijs.createMaterial(
+                    new THREE.MeshLambertMaterial({color: FINGER_COLOURS[i], ambient: 0xdadada}),
+                    1.0,
+                    0.5);
+
+            var fingerModel = new Physijs.CylinderMesh( geometry, material, 10 );
 
             /*
-            var fingerModel = new Physijs.CylinderMesh( sphereGeometry, new THREE.MeshLambertMaterial({color: FINGER_COLOURS[i],
-                ambient: 0xdadada}) );
-            */
-
             var fingerModel = new THREE.Mesh( sphereGeometry, new THREE.MeshLambertMaterial({color: FINGER_COLOURS[i],
                 ambient: 0xdadada}) );
+                */
 
             // Set off-screen to start with
             fingerModel.position.set(DEFAULT_FINGER_POS.x, DEFAULT_FINGER_POS.y, DEFAULT_FINGER_POS.z);
@@ -215,12 +219,12 @@ var App = function() {
         table_material.map.repeat.set( 5, 5 );
 
         table = new Physijs.BoxMesh(
-                new THREE.CubeGeometry(80, 1, 80),
+                new THREE.CubeGeometry(500, 1, 500),
                 table_material,
                 0, // mass
                 { restitution: .2, friction: .8 }
         );
-        table.position.y = -.5;
+        table.position.y = 0;
         table.receiveShadow = true;
         scene.add( table );
 
@@ -232,7 +236,7 @@ var App = function() {
         );
 
         balance = new Physijs.ConeMesh(
-                new THREE.CylinderGeometry(1, 10, 20, 20, 20, false),
+                new THREE.CylinderGeometry(1, 10, 15, 20, 20, false),
                 balance_material,
                 0 // mass
         );
@@ -241,17 +245,35 @@ var App = function() {
         // Plinth
         plinth_material = Physijs.createMaterial(
                 new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/plywood.jpg' ), ambient: 0xFFFFFF }),
-                .5, // medium friction
+                1, // medium friction
                 1 // high restitution
         );
         plinth_material.map.wrapS = plinth_material.map.wrapT = THREE.RepeatWrapping;
         plinth_material.map.repeat.set( 1, .5 );
         plinth_geometry = new THREE.CubeGeometry( 50, 1, 10 );
         plinth = new Physijs.BoxMesh( plinth_geometry, plinth_material, 1);
-        plinth.position.y = 10.5;
+        plinth.position.y = 8.5;
         plinth.receiveShadow = true;
         plinth.castShadow = true;
         scene.add( plinth );
+
+        // Constraint
+        var constraint = new Physijs.HingeConstraint(
+                balance, // First object to be constrained
+                plinth, // OPTIONAL second object - if omitted then physijs_mesh_1 will be constrained to the scene
+                new THREE.Vector3( 0, 0, 0 ), // point in the scene to apply the constraint
+                new THREE.Vector3( 0, 0, 1 ) // Axis along which the hinge lies - in this case it is the X axis
+        );
+        scene.addConstraint( constraint );
+        constraint.setLimits(
+                -Math.PI / 8, // minimum angle of motion, in radians
+                Math.PI / 8, // maximum angle of motion, in radians
+                1, // applied as a factor to constraint error
+                0 // controls bounce at limit (0.0 == no bounce)
+        );
+        //constraint.enableAngularMotor( target_velocity, acceration_force );
+        constraint.disableMotor();
+
 
         // Box
         box_material = Physijs.createMaterial(
@@ -289,13 +311,17 @@ var App = function() {
         // Duck 1
         loader.load('models/RubberDucky4.js', function(geometry, materials) {
 
-            var material = new THREE.MeshFaceMaterial(materials);
+            var material = Physijs.createMaterial(
+                    new THREE.MeshFaceMaterial(materials),
+                    1, // high friction
+                    .1 // low restitution
+            );
 
-            var model = new Physijs.BoxMesh( geometry, material, 5 );
+            var model = new Physijs.BoxMesh( geometry, material, 1 );
 
             model.scale.set(3, 3, 3);
 
-            model.position.set( 10, 20, 0 );
+            model.position.set( 14, 13, 0 );
 
             model.rotation.y = Math.PI * 1/4;
 
@@ -307,6 +333,7 @@ var App = function() {
         });
 
         // Duck 2
+        /*
         loader.load('models/RubberDucky4.js', function(geometry, materials) {
 
             var material = new THREE.MeshFaceMaterial(materials);
@@ -328,6 +355,7 @@ var App = function() {
 
 
         });
+        */
 
     }
 
@@ -522,6 +550,9 @@ var App = function() {
                 fingerModels[i].position.set( fingerPos.x, fingerPos.y, fingerPos.z );
                 fingerModels[i].rotation.set( fingerRot.x, fingerRot.y, fingerRot.z );
 
+                fingerModels[i].__dirtyPosition = true;
+                fingerModels[i].__dirtyRotation = true;
+
             }
 
         }
@@ -531,6 +562,9 @@ var App = function() {
 
             fingerModels[j].position.set( DEFAULT_FINGER_POS.x, DEFAULT_FINGER_POS.y, DEFAULT_FINGER_POS.z );
             fingerModels[j].rotation.set( DEFAULT_FINGER_ROT.x, DEFAULT_FINGER_ROT.y, DEFAULT_FINGER_ROT.z );
+
+            fingerModels[i].__dirtyPosition = true;
+            fingerModels[i].__dirtyRotation = true;
 
         }
 
