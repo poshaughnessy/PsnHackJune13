@@ -116,18 +116,12 @@ var App = function() {
 
         setupFingerRepresentations();
 
-        //setupGround();
-        //setupWeight();
-
         setupBalanceObjects();
-
-        //loadItems();
 
         setupLights();
 
         initEvents();
 
-        // XXX Until we have splash screen, start straight away
         start();
 
     }
@@ -135,16 +129,6 @@ var App = function() {
     function initEvents() {
 
         window.addEventListener( 'resize', onWindowResize, false );
-
-        $('#go').click(function(event) {
-            start();
-            event.preventDefault();
-        });
-
-        $('#restart').click(function(event) {
-            restart();
-            event.preventDefault();
-        });
 
     }
 
@@ -192,6 +176,8 @@ var App = function() {
 
         var rightEquation = '';
 
+        // XXX Eeek last-minute rush...
+
         if( duck1.position.z < 1 ) {
             var dist = $('#dist1').html();
             dist = dist.substring(0, dist.length - 1);
@@ -223,7 +209,6 @@ var App = function() {
         if( plinth.rotation.z >= -0.2 && plinth.rotation.z <= 0.2 ) {
 
             // Win!
-
             $('#win').fadeIn('fast');
 
         } else {
@@ -241,6 +226,11 @@ var App = function() {
 
     }
 
+    /**
+     * Oops - we never got reset to work in the time available.
+     * This seems to be the problem:
+     * http://japhr.blogspot.co.uk/2013/03/pausing-physics.html
+     */
     function reset() {
 
         $('#win').hide();
@@ -330,6 +320,8 @@ var App = function() {
 
             var geometry = new THREE.CylinderGeometry(1.5, 1.5, 10);
 
+            // You can switch the fingers to be part of the physics engine scene
+            // if you want to just knock things around! (It's fun!)
             /*
             var material = Physijs.createMaterial(
                     new THREE.MeshLambertMaterial({color: FINGER_COLOURS[i], ambient: 0xdadada}),
@@ -515,10 +507,8 @@ var App = function() {
 
             duck2.scale.set(3, 3, 3);
 
-            // XXX above balance
+            // Above balance
             duck2.position.set( -20, 13, 0 );
-
-            //duck2.position.set( -6, 4.6, 25 );
 
             duck2.rotation.y = Math.PI * 1/8;
 
@@ -631,13 +621,9 @@ var App = function() {
 
             var material = new THREE.MeshFaceMaterial(materials);
 
-            //var material = new THREE.MeshBasicMaterial({color: 0xFFFF66});
-
             duck4 = new Physijs.BoxMesh( geometry, material, 1 );
 
             duck4.scale.set(1, 1, 1);
-
-            //duck4.position.set( -10, 20, 0 );
 
             duck4.position.set( 17, 1.8, 25 );
 
@@ -684,30 +670,6 @@ var App = function() {
 
     }
 
-    function drawBoundingBox(box, scaleX, scaleY, scaleZ) {
-
-        var length = scaleX * (box.max.x - box.min.x);
-        var height = scaleY * (box.max.y - box.min.y);
-        var depth =  scaleZ * (box.max.z - box.min.z);
-        var boundingBoxGeometry = new THREE.CubeGeometry( length, height, depth );
-        for ( var i = 0; i < boundingBoxGeometry.faces.length; i ++ )
-        {
-            boundingBoxGeometry.faces[i].color.setHex( Math.random() * 0xffffff );
-        }
-        var boundingBoxMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, vertexColors: THREE.FaceColors, transparent: true, opacity: 0.7 } );
-        var boundingBoxMesh = new THREE.Mesh( boundingBoxGeometry, boundingBoxMaterial);
-
-        /*
-        var bboxCenter = box.center();
-        boundingBoxMesh.translateX (bboxCenter.x);
-        boundingBoxMesh.translateY (bboxCenter.y);
-        boundingBoxMesh.translateZ (bboxCenter.z);
-        */
-
-        scene.add( boundingBoxMesh );
-
-    }
-
     function setupLights() {
 
         // Lights
@@ -748,26 +710,10 @@ var App = function() {
 
         console.log('START');
 
-        /*
-        document.getElementById('welcome').style.display = 'none';
-        document.getElementById('info').style.display = 'block';
-        */
-
         requestAnimationFrame( render );
-        //scene.simulate();
 
         // Set method that gets called with every Leap frame
         Leap.loop(update);
-
-    }
-
-    function restart() {
-
-        console.log('RESTART');
-
-        repositionItems();
-
-        reportNumCorrect(0);
 
     }
 
@@ -781,15 +727,12 @@ var App = function() {
 
         leapControl(frame);
 
-        //render();
-
     }
 
     function render() {
 
         requestAnimationFrame( render );
 
-        //camera.lookAt( scene.position );
         renderer.render( scene, camera );
 
     }
@@ -807,8 +750,6 @@ var App = function() {
     }
 
     function leapControl(frame) {
-
-        //console.log('leap control', frame);
 
         updateFingerRepresentations(frame);
 
@@ -1005,9 +946,6 @@ var App = function() {
 
                     hoveredItem = touchingItem;
 
-                    // Highlight hovered object
-                    updateHighlights();
-
                     console.log('hoveredObj', hoveredItem);
 
                     hoverTime = 0;
@@ -1034,9 +972,6 @@ var App = function() {
                             hoveredItem = undefined;
                             hoverTime = 0;
 
-                            // Highlight selected object
-                            updateHighlights();
-
                         }
 
                     } else {
@@ -1062,22 +997,15 @@ var App = function() {
                     hoveredItem = undefined;
                     hoverTime = 0;
 
-                    // Remove any hover/selected highlight
-                    updateHighlights();
-
                 }
 
             }
 
         } else {
+
             // Object already selected
 
             if( fingerPos.x != OFF_SCREEN_VALUE && fingerPos.z > 0 ) {
-
-                //selectedItem.moveTo( fingerPos );
-
-                //var labelXDiff = selectedItem.label.position.x - selectedItem.model.position.x;
-                //var labelYDiff = selectedItem.label.position.y - selectedItem.model.position.y;
 
                 selectedItem.model.position.x = fingerPos.x;
                 selectedItem.model.position.y = Math.min(fingerPos.y, selectedItem.weight + 10);
@@ -1085,15 +1013,6 @@ var App = function() {
 
                 selectedItem.model.__dirtyPosition = true;
                 selectedItem.model.__dirtyRotation = true;
-
-                /*
-                selectedItem.label.position.x = fingerPos.x + labelXDiff;
-                selectedItem.label.position.y = fingerPos.y - labelYDiff;
-                selectedItem.label.position.z = fingerPos.z;
-                */
-
-                //selectedItem.label.__dirtyPosition = true;
-                //selectedItem.label.__dirtyRotation = true;
 
             } else {
 
@@ -1119,9 +1038,6 @@ var App = function() {
                 console.log('now selectdItem.distLabel', selectedItem.distLabel);
 
                 selectedItem = undefined;
-
-                // Remove selected highlight
-                updateHighlights();
 
             }
 
@@ -1173,14 +1089,6 @@ var App = function() {
 
                     button.material.materials[1].emissive.copy( new THREE.Color(0xff0000) );
 
-                    /*
-                    duck1.mass = 4;
-                    duck2.mass = 3;
-                    duck3.mass = 2;
-                    duck4.mass = 1;
-                    plinth.mass = 1;
-                    */
-
                     scene.simulate();
 
                 } else {
@@ -1201,76 +1109,6 @@ var App = function() {
             buttonHoverTime = 0;
 
         }
-
-    }
-
-            // Draw a line - useful for marking correct positions/axes when debugging
-    function drawLine( startx, starty, startz, endx, endy, endz, lColor ) {
-
-        if( lColor == undefined ) {
-            lColor = new THREE.Color(0xffffff);
-        }
-
-        var mat = new THREE.LineBasicMaterial({
-            color: lColor,
-            opacity: 0.7,
-            blending: THREE.AdditiveBlending,
-            transparent: true,
-            linewidth: 5
-        });
-
-        var geom = new THREE.Geometry();
-
-        geom.vertices.push(new THREE.Vector3(startx, starty, startz));
-        geom.vertices.push(new THREE.Vector3(endx, endy, endz));
-
-        this.drawingLine = new THREE.Line( geom , mat );
-
-        scene.add( this.drawingLine );
-
-    }
-
-    function updateHighlights() {
-
-        console.log('update highlights');
-
-        /*
-        for( var i=0; i < duckObjs.length; i++ ) {
-
-            var duckObj = duckObjs[i];
-
-            if( duckObj == selectedItem ) {
-                duckObj.label.material.color.copy( textSelectedColour );
-
-            } else if( duckObj == hoveredItem ) {
-                duckObj.label.material.color.copy( textHoveredColour );
-
-            } else {
-                duckObj.label.material.color.copy( textColour );
-            }
-
-        }
-        */
-
-    }
-
-    function checkLoadedAndConnected() {
-
-        /*
-        if( hasLoaded ) {
-            $('#status').text('Loaded content').removeClass('text-info').addClass('text-success');
-        }
-
-        if( hasConnected ) {
-
-            $('#connection').text('Leap Motion connected').addClass('text-success').removeClass('text-error');
-
-        }
-
-        if( hasLoaded && hasConnected ) {
-            document.getElementById('go').style.display = 'inline-block';
-        }
-        */
 
     }
 
