@@ -83,6 +83,8 @@ var App = function() {
 
     var BALANCE_TIME = 250;
 
+    var resetted = false;
+
 
     init();
 
@@ -153,6 +155,7 @@ var App = function() {
 
         scene = new Physijs.Scene;
         scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
+        scene.setFixedTimeStep(1/60);
         scene.addEventListener('update',
                 function() {
                     if( buttonOn ) {
@@ -163,6 +166,7 @@ var App = function() {
 
                         } else {
                             scene.simulate(); // 0.1, 20 );
+
                         }
                     }
                 }
@@ -191,18 +195,21 @@ var App = function() {
         if( duck1.position.z < 1 ) {
             var dist = $('#dist1').html();
             dist = dist.substring(0, dist.length - 1);
-            rightEquation += '4 x ' + dist + ' = ' + (4 * dist);
+            dist = parseFloat(dist).toFixed(1);
+            rightEquation += '4 x ' + dist + ' = ' + (4 * dist).toFixed(1);
         }
         if( duck3.position.z < 1 ) {
             if( rightEquation ) rightEquation += ' + ';
             var dist = $('#dist3').html();
             dist = dist.substring(0, dist.length - 1);
-            rightEquation += '2 x ' + dist + ' = ' + (2 * dist);
+            dist = parseFloat(dist).toFixed(1);
+            rightEquation += '2 x ' + dist + ' = ' + (2 * dist).toFixed(1);
         }
         if( duck4.position.z < 1 ) {
             if( rightEquation ) rightEquation += ' + ';
             var dist = $('#dist4').html();
             dist = dist.substring(0, dist.length - 1);
+            dist = parseFloat(dist).toFixed(1);
             rightEquation += '1 x ' + dist + ' = ' + dist;
         }
 
@@ -226,7 +233,7 @@ var App = function() {
 
             reset();
 
-        }, 1000);
+        }, 20000);
 
     }
 
@@ -237,6 +244,7 @@ var App = function() {
 
         $('.dist-label').attr('style', '');
 
+        /*
         duck1.position.set( -21, 5.95, 25 );
         duck2.position.set( -20, 13, 0 );
         duck3.position.set( 7, 3.2, 25 );
@@ -261,6 +269,21 @@ var App = function() {
 
         plinth.rotation.x = 0.0;
         plinth.rotation.z = 0.0;
+
+        plinth.__dirtyPosition = true;
+        plinth.__dirtyRotation = true;
+
+        // Cheating to get around pausing simulation issue
+        // See: http://japhr.blogspot.co.uk/2013/03/pausing-physics.html
+
+        duck1.mass = 0;
+        duck2.mass = 0;
+        duck3.mass = 0;
+        duck4.mass = 0;
+        plinth.mass = 0;
+
+        resetted = true;
+        */
 
     }
 
@@ -1145,6 +1168,14 @@ var App = function() {
                     console.log('button ON!', button.material);
 
                     button.material.materials[1].emissive.copy( new THREE.Color(0xff0000) );
+
+                    /*
+                    duck1.mass = 4;
+                    duck2.mass = 3;
+                    duck3.mass = 2;
+                    duck4.mass = 1;
+                    plinth.mass = 1;
+                    */
 
                     scene.simulate();
 
