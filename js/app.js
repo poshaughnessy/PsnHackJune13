@@ -62,7 +62,7 @@ var App = function() {
         textMaterial4 = new THREE.MeshLambertMaterial({color: 0xffffff});
 
     var duck1, duck2, duck3, duck4;
-    var duckObjs = []; // Obj has {weight: ..., model: ..., label: ...}
+    var duckObjs = []; // Obj has {weight: ..., model: ..., label: ..., distLabel: ...}
 
     var textColour = new THREE.Color(0xffffff);
     var textSelectedColour = new THREE.Color(0xff0000);
@@ -73,6 +73,16 @@ var App = function() {
     var buttonHoverTime = 0;
 
     var buttonOn = false;
+
+    var $distLabel1,
+        $distLabel2,
+        $distLabel3,
+        $distLabel4;
+
+    var balanceTimer = 0;
+
+    var BALANCE_TIME = 250;
+
 
     init();
 
@@ -145,10 +155,47 @@ var App = function() {
         scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
         scene.addEventListener('update',
                 function() {
-                    //console.log('simulate');
-                    scene.simulate(); // 0.1, 20 );
+                    if( buttonOn ) {
+                        balanceTimer++;
+                        if( balanceTimer > BALANCE_TIME) {
+
+                            endGo();
+
+                        } else {
+                            scene.simulate(); // 0.1, 20 );
+                        }
+                    }
                 }
         );
+
+    }
+
+    function endGo() {
+
+        console.log('End Go!');
+
+        // Turn button off
+        console.log('button OFF!', button.material);
+        button.material.materials[1].emissive.copy( new THREE.Color(0x000000) );
+
+        balanceTimer = 0;
+
+        // Test balance angle
+
+        console.log('plinth rotation', plinth.rotation);
+
+        if( plinth.rotation.z >= -0.15 && plinth.rotation.z <= 0.15 ) {
+
+            // Win!
+
+            alert( 'Win!' );
+
+        } else {
+
+            // Fail!
+            alert( 'Bad luck!' );
+
+        }
 
     }
 
@@ -174,6 +221,15 @@ var App = function() {
 
         });
 
+    }
+
+    var projector = new THREE.Projector();
+
+    function toXYCoords (pos) {
+        var vector = projector.projectVector(pos.clone(), camera);
+        vector.x = (vector.x + 1)/2 * window.innerWidth;
+        vector.y = -(vector.y - 1)/2 * window.innerHeight;
+        return vector;
     }
 
     function setupFingerRepresentations() {
@@ -354,6 +410,11 @@ var App = function() {
             var duckObj = {weight: 4, model: duck1, label: labelMesh};
             duckObjs.push(duckObj);
 
+            $distLabel1 = $('<div class="dist-label" id="dist'+1+'"></div>');
+            duckObj.distLabel = $distLabel1;
+
+            document.body.appendChild($distLabel1[0]);
+
         });
 
         // Duck 2
@@ -370,7 +431,7 @@ var App = function() {
             duck2.scale.set(3, 3, 3);
 
             // XXX above balance
-            duck2.position.set( -18, 13, 0 );
+            duck2.position.set( -20, 13, 0 );
 
             //duck2.position.set( -6, 4.6, 25 );
 
@@ -406,6 +467,22 @@ var App = function() {
 
             var duckObj = {weight: 3, model: duck2, label: labelMesh};
             duckObjs.push(duckObj);
+
+            $distLabel2 = $('<div class="dist-label" id="dist'+2+'"></div>');
+            duckObj.distLabel = $distLabel2;
+
+            var distString = (duckObj.model.position.x / 10).toFixed(1);
+
+            duckObj.distLabel.html(distString+'m');
+
+            var coords = toXYCoords(duckObj.model.position);
+
+            console.log('coords', coords);
+
+            duckObj.distLabel.css('top', coords.y);
+            duckObj.distLabel.css('left', coords.x);
+
+            document.body.appendChild($distLabel2[0]);
 
         });
 
@@ -457,6 +534,10 @@ var App = function() {
             var duckObj = {weight: 2, model: duck3, label: labelMesh};
             duckObjs.push(duckObj);
 
+            $distLabel3 = $('<div class="dist-label" id="dist'+3+'"></div>');
+            duckObj.distLabel = $distLabel3;
+
+            document.body.appendChild($distLabel3[0]);
 
         });
 
@@ -507,6 +588,11 @@ var App = function() {
 
             var duckObj = {weight: 1, model: duck4, label: labelMesh};
             duckObjs.push(duckObj);
+
+            $distLabel4 = $('<div class="dist-label" id="dist'+4+'"></div>');
+            duckObj.distLabel = $distLabel4;
+
+            document.body.appendChild($distLabel4[0]);
 
         });
 
@@ -929,6 +1015,24 @@ var App = function() {
                 // 'Drop' the object
 
                 selectedItem.label.material.color.copy( textColour );
+
+                // Update dist label
+
+                console.log('selectdItem.distLabel', selectedItem.distLabel);
+
+                var distString = (selectedItem.model.position.x / 10).toFixed(1);
+
+                selectedItem.distLabel.html(distString+'m');
+
+                var coords = toXYCoords(selectedItem.model.position);
+
+                console.log('coords', coords);
+
+                selectedItem.distLabel.css('top', coords.y);
+                selectedItem.distLabel.css('left', coords.x);
+
+                console.log('now selectdItem.distLabel', selectedItem.distLabel);
+
                 selectedItem = undefined;
 
                 // Remove selected highlight

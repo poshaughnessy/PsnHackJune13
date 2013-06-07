@@ -8,5 +8,14 @@ body {
     margin: 0;
     height: 100%;
     background-color: #fff;
+    font-family: arial, helvetica;
+}
+
+
+.dist-label {
+    color: #fff;
+    font-size: 1.2em;
+    position: absolute;
+    text-shadow: 1px 1px 1px #333;
 }
 
