@@ -18,6 +18,11 @@ var App = function() {
 
     var fingerModels = [];
 
+    /*
+    var hoveredItems;
+    var selectedItems;
+    */
+
     var hoveredItem;
     var selectedItem;
 
@@ -41,7 +46,7 @@ var App = function() {
         ASPECT = WIDTH / HEIGHT,
         NEAR = 0.1,
         FAR = 1000,
-        defaultDistance = 55;
+        defaultDistance = 65;
 
     var CONTAINER_OPACITY_DEFAULT = 0.2; // XXX Put back to 0
     var CONTAINER_OPACITY_HOVER = 0.15;
@@ -59,7 +64,9 @@ var App = function() {
     var duck1, duck2, duck3, duck4;
     var duckObjs = []; // Obj has {weight: ..., model: ..., label: ...}
 
+    var textColour = new THREE.Color(0xffffff);
     var textSelectedColour = new THREE.Color(0xff0000);
+    var textHoveredColour = new THREE.Color(0xcc0000);
 
     init();
 
@@ -290,33 +297,6 @@ var App = function() {
                 .1 // low restitution
         );
 
-        /*
-        box = new Physijs.BoxMesh(
-                new THREE.CubeGeometry( 5, 5, 5 ),
-                box_material,
-                5 // mass
-        );
-        box.position.y = 20;
-        box.position.x = 10;
-        box.castShaddow = true;
-        scene.add( box );
-        */
-
-        // Second box
-        /*
-        box2 = new Physijs.BoxMesh(
-                new THREE.CubeGeometry( 5, 5, 5 ),
-                box_material,
-                5 // mass
-        );
-        box2.position.y = 20;
-        box2.position.x = -10;
-        //box2.position.z = 1;
-        //box.castShadow = true;
-        scene.add( box2 );
-        */
-
-
         // Duck 1
         loader.load('models/RubberDucky4.js', function(geometry, materials) {
 
@@ -337,12 +317,10 @@ var App = function() {
             duck1.castShadow = true;
             duck1.receiveShadow = true;
 
-            scene.add( duck1 );
-
             var textGeo = new THREE.TextGeometry( '4kg', {
 
-                size: 2.5,
-                height: 1,
+                size: 1,
+                height: 0.5,
                 curveSegments: 10,
 
                 font: 'helvetiker',
@@ -353,11 +331,16 @@ var App = function() {
 
             });
 
-            var labelMesh = new THREE.Mesh( textGeo, textMaterial1 );
-            labelMesh.position.set( -22, 15, 25 );
-            labelMesh.rotation.x = -0.3;
+            var labelMesh = new Physijs.BoxMesh( textGeo, Physijs.createMaterial(
+                    textMaterial1,
+                    1.0,
+                    0.5), 0 );
+            labelMesh.position.y = 2;
+            labelMesh.rotation.y = -Math.PI * 1/4;
 
-            scene.add( labelMesh );
+            duck1.add( labelMesh );
+
+            scene.add( duck1 );
 
             var duckObj = {weight: 4, model: duck1, label: labelMesh};
             duckObjs.push(duckObj);
@@ -708,8 +691,10 @@ var App = function() {
                 fingerModels[i].position.set( fingerPos.x, fingerPos.y, fingerPos.z );
                 fingerModels[i].rotation.set( fingerRot.x, fingerRot.y, fingerRot.z );
 
+                /*
                 fingerModels[i].__dirtyPosition = true;
                 fingerModels[i].__dirtyRotation = true;
+                */
 
             }
 
@@ -723,8 +708,10 @@ var App = function() {
             thisFingerModel.position.set( DEFAULT_FINGER_POS.x, DEFAULT_FINGER_POS.y, DEFAULT_FINGER_POS.z );
             thisFingerModel.rotation.set( DEFAULT_FINGER_ROT.x, DEFAULT_FINGER_ROT.y, DEFAULT_FINGER_ROT.z );
 
+            /*
             thisFingerModel.__dirtyPosition = true;
             thisFingerModel.__dirtyRotation = true;
+            */
 
         }
 
@@ -732,6 +719,10 @@ var App = function() {
 
     function doItemInteractions() {
 
+        /*
+         * Trying multi-finger control...
+         */
+        /*
         for( var i=0; i < fingerModels.length; i++ ) {
 
             var fingerModel = fingerModels[i];
@@ -750,7 +741,7 @@ var App = function() {
                     //console.log('fingerPos');
                     //console.log('duckObj');
 
-                    var distBuffer = duckObj.weight * 1.5
+                    var distBuffer = duckObj.weight * 1.5;
 
                     if( fingerPos.x >= duckPos.x - distBuffer &&
                         fingerPos.x <= duckPos.x + distBuffer &&
@@ -764,6 +755,10 @@ var App = function() {
 
                         duckObj.label.material.color.copy( textSelectedColour );
 
+                        if( hoveredItems.indexOf( duckObj.weight ) ) {
+                            hoveredItems.push( duckObj.weight );
+                        }
+
                     }
 
                 }
@@ -772,9 +767,9 @@ var App = function() {
             }
 
         }
+        */
 
-        /*
-        var fingerPos = indexFingerModel.position;
+        var fingerPos = fingerModels[0].position;
 
         // If no selected object
         if( selectedItem == undefined ) {
@@ -782,34 +777,33 @@ var App = function() {
             var touchingItem = undefined;
 
             // Detect whether finger is over/under an object
-            if( fingerPos.x != OFF_SCREEN_VALUE && fingerPos.y >= ON_TRAY_Y ) {
+            if( fingerPos.x != OFF_SCREEN_VALUE ) {
 
-                var vector = fingerPos.clone().subSelf( camera.position );
+                // Check for touching ducks
 
-                //console.log('vector', vector);
+                for( var j=0; j < duckObjs.length; j++ ) {
 
-                var ray = new THREE.Raycaster( camera.position, vector.normalize(), NEAR, FAR );
+                    var duckObj = duckObjs[j];
+                    var duckPos = duckObj.model.position;
 
-                var containerObjects = getAllItemsContainerObjects();
+                    //console.log('fingerPos');
+                    //console.log('duckObj');
 
-                var collisions = ray.intersectObjects( containerObjects );
+                    var distBuffer = duckObj.weight * 1.5;
 
-                // If the ray collides with an object, i.e. if finger is over/above an object
-                if( collisions.length > 0 ) {
+                    if( fingerPos.x >= duckPos.x - distBuffer &&
+                            fingerPos.x <= duckPos.x + distBuffer &&
+                            fingerPos.y >= duckPos.y - distBuffer &&
+                            fingerPos.y <= duckPos.y + distBuffer &&
+                            fingerPos.z >= duckPos.z - distBuffer &&
+                            fingerPos.z <= duckPos.z + distBuffer ) {
 
-                    var collision = collisions[0];
+                        // Touching
+                        console.log('touching duck ' + j + ' with finger');
 
-                    // Identify the collision object
-                    for( var j=0; j < items.length; j++ ) {
+                        touchingItem = duckObj;
+                        break;
 
-                        var trayItem = items[j];
-
-                        if( trayItem.containerModel == collision.object ) {
-
-                            touchingItem = trayItem;
-                            break;
-
-                        }
                     }
 
                 }
@@ -841,12 +835,13 @@ var App = function() {
                         console.log(hoverTime);
 
                         // If hovered long enough, then select
-                        if( hoverTime >= 50 ) {
+                        if( hoverTime >= 10 ) {
 
                             console.log('Select!');
 
                             selectedItem = hoveredItem;
-                            selectedItem.containerModel.material.opacity = CONTAINER_OPACITY_SELECTED;
+                            selectedItem.label.material.color.copy( textSelectedColour );
+
 
                             hoveredItem = undefined;
                             hoverTime = 0;
@@ -860,7 +855,8 @@ var App = function() {
                         // Now hovering a different object
 
                         hoveredItem = touchingItem;
-                        hoveredItem.containerModel.material.opacity = CONTAINER_OPACITY_HOVER;
+
+                        hoveredItem.label.material.color.copy( textHoveredColour );
 
                         console.log('Reset hoveredObj', hoveredItem);
 
@@ -888,15 +884,34 @@ var App = function() {
         } else {
             // Object already selected
 
-            if( fingerPos.x != OFF_SCREEN_VALUE && fingerPos.y >= ON_TRAY_Y ) {
+            if( fingerPos.x != OFF_SCREEN_VALUE ) {
 
-                selectedItem.moveTo( fingerPos );
+                //selectedItem.moveTo( fingerPos );
+
+                //var labelXDiff = selectedItem.label.position.x - selectedItem.model.position.x;
+                //var labelYDiff = selectedItem.label.position.y - selectedItem.model.position.y;
+
+                selectedItem.model.position.x = fingerPos.x;
+                selectedItem.model.position.y = fingerPos.y;
+                selectedItem.model.position.z = fingerPos.z;
+
+                selectedItem.model.__dirtyPosition = true;
+                selectedItem.model.__dirtyRotation = true;
+
+                /*
+                selectedItem.label.position.x = fingerPos.x + labelXDiff;
+                selectedItem.label.position.y = fingerPos.y - labelYDiff;
+                selectedItem.label.position.z = fingerPos.z;
+                */
+
+                //selectedItem.label.__dirtyPosition = true;
+                //selectedItem.label.__dirtyRotation = true;
 
             } else {
 
                 // 'Drop' the object
 
-                selectedItem.containerModel.material.opacity = CONTAINER_OPACITY_DEFAULT;
+                selectedItem.label.material.color.copy( textColour );
                 selectedItem = undefined;
 
                 // Remove selected highlight
@@ -905,7 +920,6 @@ var App = function() {
             }
 
         }
-        */
 
     }
 
@@ -940,225 +954,21 @@ var App = function() {
         console.log('update highlights');
 
         /*
-        for( var i=0; i < items.length; i++ ) {
+        for( var i=0; i < duckObjs.length; i++ ) {
 
-            var trayItem = items[i];
+            var duckObj = duckObjs[i];
 
-            if( trayItem.modelsSet ) {
+            if( duckObj == selectedItem ) {
+                duckObj.label.material.color.copy( textSelectedColour );
 
-                // Reset colour in case we changed it to red for a hint
-                trayItem.containerModel.material.color = new THREE.Color(0x00CC00);
+            } else if( duckObj == hoveredItem ) {
+                duckObj.label.material.color.copy( textHoveredColour );
 
-                if( trayItem == selectedItem ) {
-                    trayItem.containerModel.material.opacity = CONTAINER_OPACITY_SELECTED;
-
-                } else if( trayItem == hoveredItem ) {
-                    trayItem.containerModel.material.opacity = CONTAINER_OPACITY_HOVER;
-
-                } else {
-                    trayItem.containerModel.material.opacity = CONTAINER_OPACITY_DEFAULT;
-                }
-
+            } else {
+                duckObj.label.material.color.copy( textColour );
             }
 
         }
-        */
-
-    }
-
-    function getAllItemsContainerObjects() {
-
-        var containerObjects = [];
-
-        for( var i=0; i < items.length; i++ ) {
-            var trayItem = items[i];
-            containerObjects.push(trayItem.containerModel);
-        }
-
-        return containerObjects;
-
-    }
-
-    function loadItems() {
-
-        /*
-        $.getJSON('data/objects.json', function(data) {
-
-            $.each(data, function(key, val) {
-
-                var trayItem = new TrayItem(key, val);
-
-                items.push(trayItem);
-
-            });
-
-            for( var i=0; i < items.length; i++ ) {
-                loadModel( items[i] );
-            }
-
-        });
-        */
-
-        loadItem('RubberDucky',
-                {
-                    width: 10,
-                    height: 10,
-                    depth: 10,
-                    x: 0,
-                    y: 10,
-                    z: 20,
-                    scale: 5,
-                    rotation: {x: 0, y: -Math.PI * 3/4, z: 0}
-                });
-
-    }
-
-    function loadItem(id, props) {
-
-        loader.load('models/'+id+'.js', function(geometry, materials) {
-
-            //var material = new THREE.MeshFaceMaterial(materials);
-
-            var material = new THREE.MeshBasicMaterial({color: 0xFFFF66});
-
-            var model = new Physijs.BoxMesh( geometry, material, 1 );
-
-            model.scale.set(props.scale, props.scale, props.scale);
-
-            model.position.set( props.x, props.y, props.z );
-
-            model.rotation.set( props.rotation.x, props.rotation.y, props.rotation.z );
-
-            model.receiveShadow = true;
-
-            scene.add( model );
-
-
-            // Create a simple container object for collision detection purposes
-
-            /*
-            var containerGeo = new THREE.CubeGeometry(props.width, props.height, props.depth);
-
-            var container = new Physijs.BoxMesh( containerGeo,
-                    new THREE.MeshLambertMaterial({color: 0x00FF00, transparent: true}));
-
-            container.material.opacity = CONTAINER_OPACITY_DEFAULT;
-
-            container.position.set( props.x, props.y, props.z );
-
-            scene.add(container);
-            */
-
-            modelLoaded();
-
-        });
-
-    }
-
-    function repositionItems() {
-
-        // TODO
-
-        /*
-        $.getJSON('data/objects.json', function(data) {
-
-            for( var i=0; i < items.length; i++ ) {
-
-                var weightItem = items[i];
-
-                weightItem.moveTo( {x: data[weightItem.id].objectProps.x,
-                    y: ON_TRAY_Y,
-                    z: data[weightItem.id].objectProps.z} );
-
-            }
-
-        });
-        */
-
-    }
-
-    /*
-    function loadModel( weightItem ) {
-
-        var filepath = 'models/'+weightItem.id+'/'+weightItem.id+'.js';
-
-        // TODO container
-        *//*
-        var objectProps = weightItem.objectProps;
-        var containerProps = weightItem.containerProps;
-
-        // Create a simple container object for collision detection purposes
-
-        var containerGeo = new THREE.CubeGeometry(containerProps.width, containerProps.height, containerProps.depth);
-
-        var container = new THREE.Mesh( containerGeo,
-                new THREE.MeshLambertMaterial({color: 0x00FF00, transparent: true}));
-
-        container.material.opacity = CONTAINER_OPACITY_DEFAULT;
-
-        if( containerProps.rotationX ){
-            container.rotation.x = containerProps.rotationX;
-        }
-        if( containerProps.rotationY ){
-            container.rotation.y = containerProps.rotationY;
-        }
-
-        container.position.set( containerProps.x, 0, containerProps.z );
-
-        scene.add(container);
-        *//*
-
-        loader.load(filepath, function(geometry, materials) {
-
-            var material = new THREE.MeshFaceMaterial(materials);
-
-            *//*
-            if( objectProps.replaceMaterial ) {
-            *//*
-                material = new THREE.MeshLambertMaterial( { color: 0x393939, ambient: 0x9b9b9b,
-                    reflectivity: 0.3 } );
-            *//*
-            }
-            *//*
-
-            var model = new THREE.Mesh( geometry, material );
-
-            *//*
-            model.position.set(objectProps.x, 0, objectProps.z);
-            if( objectProps.rotationX ){
-                model.rotation.x = objectProps.rotationX;
-            }
-            if( objectProps.rotationY ){
-                model.rotation.y = objectProps.rotationY;
-            }
-            if( objectProps.scale ) {
-                model.scale.set(objectProps.scale, objectProps.scale, objectProps.scale);
-            }
-            *//*
-
-            model.castShadow = true;
-
-            scene.add( model );
-
-            console.log('After adding model:', items);
-
-            modelLoaded();
-
-        });
-
-    }
-    */
-
-    function modelLoaded() {
-
-        /*
-        numLoadedModels++;
-
-        if( numLoadedModels >= items.length ) {
-            hasLoaded = true;
-        }
-
-        checkLoadedAndConnected();
         */
 
     }
