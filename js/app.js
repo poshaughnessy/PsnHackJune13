@@ -81,7 +81,7 @@ var App = function() {
 
     var balanceTimer = 0;
 
-    var BALANCE_TIME = 250;
+    var BALANCE_TIME = 200;
 
     var resetted = false;
 
@@ -199,24 +199,28 @@ var App = function() {
             rightEquation += '4 x ' + dist + ' = ' + (4 * dist).toFixed(1);
         }
         if( duck3.position.z < 1 ) {
-            if( rightEquation ) rightEquation += ' + ';
+            if( rightEquation ) rightEquation = '('+rightEquation+') + ';
             var dist = $('#dist3').html();
             dist = dist.substring(0, dist.length - 1);
             dist = parseFloat(dist).toFixed(1);
-            rightEquation += '2 x ' + dist + ' = ' + (2 * dist).toFixed(1);
+            rightEquation += rightEquation.indexOf('(') > -1 ?
+                    '(2 x ' + dist + ' = ' + (2 * dist).toFixed(1) + ')' :
+                    '2 x ' + dist + ' = ' + (2 * dist).toFixed(1);
         }
         if( duck4.position.z < 1 ) {
-            if( rightEquation ) rightEquation += ' + ';
+            if( rightEquation ) rightEquation = '('+rightEquation+') + ';
             var dist = $('#dist4').html();
             dist = dist.substring(0, dist.length - 1);
             dist = parseFloat(dist).toFixed(1);
-            rightEquation += '1 x ' + dist + ' = ' + dist;
+            rightEquation += rightEquation.indexOf('(') > -1 ?
+                    '(1 x ' + dist + ' = ' + dist + ')' :
+                    '1 x ' + dist + ' = ' + dist;
         }
 
         $('#win .right').html(rightEquation);
         $('#lose .right').html(rightEquation);
 
-        if( plinth.rotation.z >= -0.15 && plinth.rotation.z <= 0.15 ) {
+        if( plinth.rotation.z >= -0.2 && plinth.rotation.z <= 0.2 ) {
 
             // Win!
 
