@@ -68,6 +68,12 @@ var App = function() {
     var textSelectedColour = new THREE.Color(0xff0000);
     var textHoveredColour = new THREE.Color(0xcc0000);
 
+    var button;
+
+    var buttonHoverTime = 0;
+
+    var buttonOn = false;
+
     init();
 
     function init() {
@@ -152,19 +158,19 @@ var App = function() {
 
             var material = new THREE.MeshFaceMaterial(materials);
 
-            var model = new THREE.Mesh( geometry, material );
+            button = new THREE.Mesh( geometry, material );
 
-            model.scale.set(1, 1, 1);
+            button.scale.set(1, 1, 1);
 
-            model.position.set( 30, 30, -5 );
+            button.position.set( 40, 30, 5 );
 
-            model.rotation.x = Math.PI / 2;
-            //model.rotation.y = -Math.PI;
-            model.rotation.z = 0.3;
+            button.rotation.x = Math.PI / 2;
+            //button.rotation.y = -Math.PI;
+            button.rotation.z = 0.3;
 
-            model.receiveShadow = true;
+            button.receiveShadow = true;
 
-            scene.add( model );
+            scene.add( button );
 
         });
 
@@ -642,6 +648,8 @@ var App = function() {
 
         doItemInteractions();
 
+        doButtonInteractions();
+
     }
 
     function updateFingerRepresentations(frame) {
@@ -690,7 +698,7 @@ var App = function() {
 
                     // Just doing a rough translation to our 3D scene coordinates for now...
 
-                    fingerPos = {x: x / 5, y: Math.max(0, (y-100) / 5), z: (z+10) / 5};
+                    fingerPos = {x: x / 5, y: Math.max(0, (y-110) / 5), z: (z+100) / 5};
 
                 }
 
@@ -937,7 +945,74 @@ var App = function() {
 
     }
 
-    // Draw a line - useful for marking correct positions/axes when debugging
+    function doButtonInteractions() {
+
+        var fingerPos = fingerModels[0].position;
+
+        var hoveringButton = false;
+
+        // If no selected object
+        if( selectedItem == undefined ) {
+
+            if( fingerPos.x != OFF_SCREEN_VALUE ) {
+
+                var distBuffer = 8;
+
+                var buttonPos = button.position;
+
+                if( fingerPos.x >= buttonPos.x - distBuffer &&
+                        fingerPos.x <= buttonPos.x + distBuffer &&
+                        fingerPos.y >= buttonPos.y - distBuffer &&
+                        fingerPos.y <= buttonPos.y + distBuffer &&
+                        fingerPos.z >= buttonPos.z - distBuffer &&
+                        fingerPos.z <= buttonPos.z + distBuffer ) {
+
+                    hoveringButton = true;
+
+                }
+
+            }
+
+        }
+
+        if( hoveringButton ) {
+
+            buttonHoverTime += 1;
+
+            if( buttonHoverTime > 10 ) {
+
+                buttonOn = !buttonOn;
+
+                if( buttonOn ) {
+
+                    console.log('button ON!', button.material);
+
+                    button.material.materials[1].emissive.copy( new THREE.Color(0xff0000) );
+
+                    scene.simulate();
+
+                } else {
+
+                    console.log('button OFF!', button.material);
+
+                    button.material.materials[1].emissive.copy( new THREE.Color(0x000000) );
+
+                }
+
+                // Wait longer
+                buttonHoverTime = -50;
+
+            }
+
+        } else {
+
+            buttonHoverTime = 0;
+
+        }
+
+    }
+
+            // Draw a line - useful for marking correct positions/axes when debugging
     function drawLine( startx, starty, startz, endx, endy, endz, lColor ) {
 
         if( lColor == undefined ) {
