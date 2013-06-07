@@ -893,7 +893,7 @@ var App = function() {
         } else {
             // Object already selected
 
-            if( fingerPos.x != OFF_SCREEN_VALUE ) {
+            if( fingerPos.x != OFF_SCREEN_VALUE && fingerPos.z > 0 ) {
 
                 //selectedItem.moveTo( fingerPos );
 
