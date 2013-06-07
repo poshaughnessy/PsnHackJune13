@@ -226,7 +226,7 @@ var App = function() {
 
             reset();
 
-        }, 10000);
+        }, 1000);
 
     }
 
@@ -235,13 +235,32 @@ var App = function() {
         $('#win').hide();
         $('#lose').hide();
 
-        /*
-        scene.remove(duck1);
-        scene.remove(duck2);
-        scene.remove(duck3);
-        scene.remove(duck4);
-        */
+        $('.dist-label').attr('style', '');
 
+        duck1.position.set( -21, 5.95, 25 );
+        duck2.position.set( -20, 13, 0 );
+        duck3.position.set( 7, 3.2, 25 );
+        duck4.position.set( 17, 1.8, 25 );
+
+        duck1.rotation.set( 0, Math.PI * 1/4, 0 );
+        duck2.rotation.set( 0, Math.PI * 1/8, 0 );
+        duck3.rotation.set( 0, Math.PI * 1/4, 0 );
+        duck4.rotation.set( 0, Math.PI * 1/8, 0 );
+
+        duck1.__dirtyPosition = true;
+        duck1.__dirtyRotation = true;
+
+        duck2.__dirtyPosition = true;
+        duck2.__dirtyRotation = true;
+
+        duck3.__dirtyPosition = true;
+        duck3.__dirtyRotation = true;
+
+        duck4.__dirtyPosition = true;
+        duck4.__dirtyRotation = true;
+
+        plinth.rotation.x = 0.0;
+        plinth.rotation.z = 0.0;
 
     }
 
@@ -402,13 +421,6 @@ var App = function() {
         //constraint.enableAngularMotor( target_velocity, acceration_force );
         constraint.disableMotor();
 
-
-        // Box
-        box_material = Physijs.createMaterial(
-                new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/wood.jpg' ), ambient: 0xFFFFFF }),
-                1, // high friction
-                .1 // low restitution
-        );
 
         // Duck 1
         loader.load('models/RubberDucky4.js', function(geometry, materials) {
