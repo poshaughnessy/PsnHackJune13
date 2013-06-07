@@ -319,7 +319,7 @@ var App = function() {
 
             var textGeo = new THREE.TextGeometry( '4kg', {
 
-                size: 1,
+                size: 0.75,
                 height: 0.5,
                 curveSegments: 10,
 
@@ -370,12 +370,10 @@ var App = function() {
             duck2.castShadow = true;
             duck2.receiveShadow = true;
 
-            scene.add( duck2 );
-
             var textGeo = new THREE.TextGeometry( '3kg', {
 
-                size: 2.5,
-                height: 1,
+                size: 1,
+                height: 0.5,
                 curveSegments: 10,
 
                 font: 'helvetiker',
@@ -386,11 +384,16 @@ var App = function() {
 
             });
 
-            var labelMesh = new THREE.Mesh( textGeo, textMaterial2 );
-            labelMesh.position.set( -8, 11, 25 );
-            labelMesh.rotation.x = -0.3;
+            var labelMesh = new Physijs.BoxMesh( textGeo, Physijs.createMaterial(
+                    textMaterial2,
+                    1.0,
+                    0.5), 0 );
+            labelMesh.position.y = 2;
+            labelMesh.rotation.y = -Math.PI * 1/8;
 
-            scene.add( labelMesh );
+            duck2.add( labelMesh );
+
+            scene.add( duck2 );
 
             var duckObj = {weight: 3, model: duck2, label: labelMesh};
             duckObjs.push(duckObj);
@@ -420,12 +423,10 @@ var App = function() {
             duck3.castShadow = true;
             duck3.receiveShadow = true;
 
-            scene.add( duck3 );
-
             var textGeo = new THREE.TextGeometry( '2kg', {
 
-                size: 2.5,
-                height: 1,
+                size: 1.5,
+                height: 0.5,
                 curveSegments: 10,
 
                 font: 'helvetiker',
@@ -436,11 +437,16 @@ var App = function() {
 
             });
 
-            var labelMesh = new THREE.Mesh( textGeo, textMaterial3 );
-            labelMesh.position.set( 4, 8, 25 );
-            labelMesh.rotation.x = -0.3;
+            var labelMesh = new Physijs.BoxMesh( textGeo, Physijs.createMaterial(
+                    textMaterial3,
+                    1.0,
+                    0.5), 0 );
+            labelMesh.position.y = 2;
+            labelMesh.rotation.y = -Math.PI * 1/4;
 
-            scene.add( labelMesh );
+            duck3.add( labelMesh );
+
+            scene.add( duck3 );
 
             var duckObj = {weight: 2, model: duck3, label: labelMesh};
             duckObjs.push(duckObj);
@@ -468,12 +474,10 @@ var App = function() {
             duck4.castShadow = true;
             duck4.receiveShadow = true;
 
-            scene.add( duck4 );
-
             var textGeo = new THREE.TextGeometry( '1kg', {
 
-                size: 2.5,
-                height: 1,
+                size: 3,
+                height: 0.5,
                 curveSegments: 10,
 
                 font: 'helvetiker',
@@ -484,11 +488,16 @@ var App = function() {
 
             });
 
-            var labelMesh = new THREE.Mesh( textGeo, textMaterial4 );
-            labelMesh.position.set( 14, 6, 25 );
-            labelMesh.rotation.x = -0.3;
+            var labelMesh = new Physijs.BoxMesh( textGeo, Physijs.createMaterial(
+                    textMaterial4,
+                    1.0,
+                    0.5), 0 );
+            labelMesh.position.y = 2;
+            labelMesh.rotation.y = -Math.PI * 1/8;
 
-            scene.add( labelMesh );
+            duck4.add( labelMesh );
+
+            scene.add( duck4 );
 
             var duckObj = {weight: 1, model: duck4, label: labelMesh};
             duckObjs.push(duckObj);
