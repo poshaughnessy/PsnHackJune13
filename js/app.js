@@ -41,7 +41,7 @@ var App = function() {
         ASPECT = WIDTH / HEIGHT,
         NEAR = 0.1,
         FAR = 1000,
-        defaultDistance = 50;
+        defaultDistance = 55;
 
     var CONTAINER_OPACITY_DEFAULT = 0.2; // XXX Put back to 0
     var CONTAINER_OPACITY_HOVER = 0.15;
@@ -51,7 +51,15 @@ var App = function() {
             table_material, balance, balance_material,
             plinth, plinth_material, plinth_geometry;
 
-    var duck1, duck2;
+    var textMaterial1 = new THREE.MeshLambertMaterial({color: 0xffffff}),
+        textMaterial2 = new THREE.MeshLambertMaterial({color: 0xffffff}),
+        textMaterial3 = new THREE.MeshLambertMaterial({color: 0xffffff}),
+        textMaterial4 = new THREE.MeshLambertMaterial({color: 0xffffff});
+
+    var duck1, duck2, duck3, duck4;
+    var duckObjs = []; // Obj has {weight: ..., model: ..., label: ...}
+
+    var textSelectedColour = new THREE.Color(0xff0000);
 
     init();
 
@@ -69,7 +77,7 @@ var App = function() {
         renderer.clear();
 
         camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR );
-        camera.position.y = 50;
+        camera.position.y = 40;
         camera.position.z = defaultDistance;
 
         camera.lookAt( new THREE.Vector3(0,0,0) );
@@ -135,17 +143,17 @@ var App = function() {
 
             var geometry = new THREE.CylinderGeometry(1.5, 1.5, 10);
 
+            /*
             var material = Physijs.createMaterial(
                     new THREE.MeshLambertMaterial({color: FINGER_COLOURS[i], ambient: 0xdadada}),
                     1.0,
                     0.5);
 
             var fingerModel = new Physijs.CylinderMesh( geometry, material, 10 );
+            */
 
-            /*
-            var fingerModel = new THREE.Mesh( sphereGeometry, new THREE.MeshLambertMaterial({color: FINGER_COLOURS[i],
+            var fingerModel = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial({color: FINGER_COLOURS[i],
                 ambient: 0xdadada}) );
-                */
 
             // Set off-screen to start with
             fingerModel.position.set(DEFAULT_FINGER_POS.x, DEFAULT_FINGER_POS.y, DEFAULT_FINGER_POS.z);
@@ -308,7 +316,55 @@ var App = function() {
         scene.add( box2 );
         */
 
+
         // Duck 1
+        loader.load('models/RubberDucky4.js', function(geometry, materials) {
+
+            var material = new THREE.MeshFaceMaterial(materials);
+
+            //var material = new THREE.MeshBasicMaterial({color: 0xFFFF66});
+
+            duck1 = new Physijs.BoxMesh( geometry, material, 5 );
+
+            duck1.scale.set(4, 4, 4);
+
+            //duck1.position.set( -10, 20, 0 );
+
+            duck1.position.set( -21, 5.95, 25 );
+
+            duck1.rotation.y = Math.PI * 1/4;
+
+            duck1.castShadow = true;
+            duck1.receiveShadow = true;
+
+            scene.add( duck1 );
+
+            var textGeo = new THREE.TextGeometry( '4kg', {
+
+                size: 2.5,
+                height: 1,
+                curveSegments: 10,
+
+                font: 'helvetiker',
+                weight: 'normal',
+
+                material: 0,
+                extrudeMaterial: 1
+
+            });
+
+            var labelMesh = new THREE.Mesh( textGeo, textMaterial1 );
+            labelMesh.position.set( -22, 15, 25 );
+            labelMesh.rotation.x = -0.3;
+
+            scene.add( labelMesh );
+
+            var duckObj = {weight: 4, model: duck1, label: labelMesh};
+            duckObjs.push(duckObj);
+
+        });
+
+        // Duck 2
         loader.load('models/RubberDucky4.js', function(geometry, materials) {
 
             var material = Physijs.createMaterial(
@@ -317,45 +373,145 @@ var App = function() {
                     .1 // low restitution
             );
 
-            var model = new Physijs.BoxMesh( geometry, material, 1 );
+            duck2 = new Physijs.BoxMesh( geometry, material, 1 );
 
-            model.scale.set(3, 3, 3);
+            duck2.scale.set(3, 3, 3);
 
-            model.position.set( 14, 13, 0 );
+            // XXX above balance
+            //duck2.position.set( 14, 13, 0 );
 
-            model.rotation.y = Math.PI * 1/4;
+            duck2.position.set( -6, 4.6, 25 );
 
-            model.castShadow = true;
-            model.receiveShadow = true;
+            duck2.rotation.y = Math.PI * 1/8;
 
-            scene.add( model );
+            duck2.castShadow = true;
+            duck2.receiveShadow = true;
+
+            scene.add( duck2 );
+
+            var textGeo = new THREE.TextGeometry( '3kg', {
+
+                size: 2.5,
+                height: 1,
+                curveSegments: 10,
+
+                font: 'helvetiker',
+                weight: 'normal',
+
+                material: 0,
+                extrudeMaterial: 1
+
+            });
+
+            var labelMesh = new THREE.Mesh( textGeo, textMaterial2 );
+            labelMesh.position.set( -8, 11, 25 );
+            labelMesh.rotation.x = -0.3;
+
+            scene.add( labelMesh );
+
+            var duckObj = {weight: 3, model: duck2, label: labelMesh};
+            duckObjs.push(duckObj);
 
         });
 
-        // Duck 2
-        /*
+        // Duck 3
+        loader.load('models/RubberDucky4.js', function(geometry, materials) {
+
+            var material = Physijs.createMaterial(
+                    new THREE.MeshFaceMaterial(materials),
+                    1, // high friction
+                    .1 // low restitution
+            );
+
+            duck3 = new Physijs.BoxMesh( geometry, material, 1 );
+
+            duck3.scale.set(2, 2, 2);
+
+            // XXX above balance
+            //duck3.position.set( 14, 13, 0 );
+
+            duck3.position.set( 7, 3.2, 25 );
+
+            duck3.rotation.y = Math.PI * 1/4;
+
+            duck3.castShadow = true;
+            duck3.receiveShadow = true;
+
+            scene.add( duck3 );
+
+            var textGeo = new THREE.TextGeometry( '2kg', {
+
+                size: 2.5,
+                height: 1,
+                curveSegments: 10,
+
+                font: 'helvetiker',
+                weight: 'normal',
+
+                material: 0,
+                extrudeMaterial: 1
+
+            });
+
+            var labelMesh = new THREE.Mesh( textGeo, textMaterial3 );
+            labelMesh.position.set( 4, 8, 25 );
+            labelMesh.rotation.x = -0.3;
+
+            scene.add( labelMesh );
+
+            var duckObj = {weight: 2, model: duck3, label: labelMesh};
+            duckObjs.push(duckObj);
+
+
+        });
+
+        // Duck 4
         loader.load('models/RubberDucky4.js', function(geometry, materials) {
 
             var material = new THREE.MeshFaceMaterial(materials);
 
             //var material = new THREE.MeshBasicMaterial({color: 0xFFFF66});
 
-            var model = new Physijs.BoxMesh( geometry, material, 5 );
+            duck4 = new Physijs.BoxMesh( geometry, material, 5 );
 
-            model.scale.set(3, 3, 3);
+            duck4.scale.set(1, 1, 1);
 
-            model.position.set( -10, 20, 0 );
+            //duck4.position.set( -10, 20, 0 );
 
-            model.rotation.y = Math.PI * 1/4;
+            duck4.position.set( 17, 1.8, 25 );
 
-            model.castShadow = true;
-            model.receiveShadow = true;
+            duck4.rotation.y = Math.PI * 1/8;
 
-            scene.add( model );
+            duck4.castShadow = true;
+            duck4.receiveShadow = true;
 
+            scene.add( duck4 );
+
+            var textGeo = new THREE.TextGeometry( '1kg', {
+
+                size: 2.5,
+                height: 1,
+                curveSegments: 10,
+
+                font: 'helvetiker',
+                weight: 'normal',
+
+                material: 0,
+                extrudeMaterial: 1
+
+            });
+
+            var labelMesh = new THREE.Mesh( textGeo, textMaterial4 );
+            labelMesh.position.set( 14, 6, 25 );
+            labelMesh.rotation.x = -0.3;
+
+            scene.add( labelMesh );
+
+            var duckObj = {weight: 1, model: duck4, label: labelMesh};
+            duckObjs.push(duckObj);
 
         });
-        */
+
 
     }
 
@@ -524,7 +680,7 @@ var App = function() {
 
                 if( tipPosition ) {
 
-                    console.log('tipPosition', tipPosition);
+                    //console.log('tipPosition', tipPosition);
 
                     var x = tipPosition.x,
                             y = tipPosition.y,
@@ -542,10 +698,12 @@ var App = function() {
                 }
 
                 // XXX
+                /*
                 if( fingerPos.x != 0 || fingerPos.y != 0 || fingerPos.z != 0 ) {
                     console.log( 'fingerPos', fingerPos );
                     console.log( 'fingerRot', fingerRot );
                 }
+                */
 
                 fingerModels[i].position.set( fingerPos.x, fingerPos.y, fingerPos.z );
                 fingerModels[i].rotation.set( fingerRot.x, fingerRot.y, fingerRot.z );
@@ -560,17 +718,60 @@ var App = function() {
         // Reset fingers we don't have data for
         for( var j=numPointables; j < 10; j++ ) {
 
-            fingerModels[j].position.set( DEFAULT_FINGER_POS.x, DEFAULT_FINGER_POS.y, DEFAULT_FINGER_POS.z );
-            fingerModels[j].rotation.set( DEFAULT_FINGER_ROT.x, DEFAULT_FINGER_ROT.y, DEFAULT_FINGER_ROT.z );
+            var thisFingerModel = fingerModels[j];
 
-            fingerModels[i].__dirtyPosition = true;
-            fingerModels[i].__dirtyRotation = true;
+            thisFingerModel.position.set( DEFAULT_FINGER_POS.x, DEFAULT_FINGER_POS.y, DEFAULT_FINGER_POS.z );
+            thisFingerModel.rotation.set( DEFAULT_FINGER_ROT.x, DEFAULT_FINGER_ROT.y, DEFAULT_FINGER_ROT.z );
+
+            thisFingerModel.__dirtyPosition = true;
+            thisFingerModel.__dirtyRotation = true;
 
         }
 
     }
 
     function doItemInteractions() {
+
+        for( var i=0; i < fingerModels.length; i++ ) {
+
+            var fingerModel = fingerModels[i];
+
+            var fingerPos = fingerModel.position;
+
+            if( fingerPos.x != OFF_SCREEN_VALUE ) {
+
+                // Check for touching ducks
+
+                for( var j=0; j < duckObjs.length; j++ ) {
+
+                    var duckObj = duckObjs[j];
+                    var duckPos = duckObj.model.position;
+
+                    //console.log('fingerPos');
+                    //console.log('duckObj');
+
+                    var distBuffer = duckObj.weight * 1.5
+
+                    if( fingerPos.x >= duckPos.x - distBuffer &&
+                        fingerPos.x <= duckPos.x + distBuffer &&
+                        fingerPos.y >= duckPos.y - distBuffer &&
+                        fingerPos.y <= duckPos.y + distBuffer &&
+                        fingerPos.z >= duckPos.z - distBuffer &&
+                        fingerPos.z <= duckPos.z + distBuffer ) {
+
+                        // Touching
+                        console.log('touching duck ' + j + ' with finger ', i);
+
+                        duckObj.label.material.color.copy( textSelectedColour );
+
+                    }
+
+                }
+
+
+            }
+
+        }
 
         /*
         var fingerPos = indexFingerModel.position;
