@@ -94,6 +94,8 @@ var App = function() {
 
         setupPhysicsAndScene();
 
+        setupButton();
+
         setupFingerRepresentations();
 
         //setupGround();
@@ -141,6 +143,30 @@ var App = function() {
                     scene.simulate(); // 0.1, 20 );
                 }
         );
+
+    }
+
+    function setupButton() {
+
+        loader.load('models/PUSH.js', function(geometry, materials) {
+
+            var material = new THREE.MeshFaceMaterial(materials);
+
+            var model = new THREE.Mesh( geometry, material );
+
+            model.scale.set(1, 1, 1);
+
+            model.position.set( 30, 30, -5 );
+
+            model.rotation.x = Math.PI / 2;
+            //model.rotation.y = -Math.PI;
+            model.rotation.z = 0.3;
+
+            model.receiveShadow = true;
+
+            scene.add( model );
+
+        });
 
     }
 
@@ -198,27 +224,6 @@ var App = function() {
         ground.receiveShadow = true;
 
         scene.add( ground );
-
-    }
-
-    function setupWeight() {
-
-        loader.load('models/small-weight.js', function(geometry) {
-
-            var weightMaterial = new THREE.MeshLambertMaterial( { color: 0x8a8181, ambient: 0xdadada,
-                reflectivity: 0.3 } );
-
-            var model = new Physijs.BoxMesh( geometry, weightMaterial, 10 );
-
-            model.scale.set(1.5, 1.5, 1.5);
-
-            model.position.set( 0, 50, 30 );
-
-            model.receiveShadow = true;
-
-            scene.add( model );
-
-        });
 
     }
 
@@ -577,7 +582,7 @@ var App = function() {
         */
 
         requestAnimationFrame( render );
-        scene.simulate();
+        //scene.simulate();
 
         // Set method that gets called with every Leap frame
         Leap.loop(update);
@@ -798,7 +803,7 @@ var App = function() {
                     //console.log('fingerPos');
                     //console.log('duckObj');
 
-                    var distBuffer = duckObj.weight * 1.5;
+                    var distBuffer = Math.max( duckObj.weight * 1.5, 2 );
 
                     if( fingerPos.x >= duckPos.x - distBuffer &&
                             fingerPos.x <= duckPos.x + distBuffer &&
