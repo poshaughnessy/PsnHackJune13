@@ -19,3 +19,44 @@ body {
     text-shadow: 1px 1px 1px #333;
 }
 
+#win,
+#lose {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    text-align: center;
+    z-index: 1;
+    font-size: 1.2em;
+    display: none;
+}
+
+#win div,
+#lose div {
+    width: 350px;
+    height: 200px;
+    padding: 20px;;
+    background-color: #444;
+    border-radius: 15px;
+    box-shadow: 1px 1px 1px #333;
+    color: #fff;
+    margin: 0 auto;
+    position: relative;
+    top: 50%;
+    margin-top: -120px;
+}
+
+#win .left,
+#lose .left {
+    float: left;
+    color: #fbb450;
+    padding-left: 20px;
+}
+
+#win .right,
+#lose .right {
+    float: right;
+    color: #0088cc;
+    padding-right: 20px;
+}

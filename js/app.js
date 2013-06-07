@@ -184,18 +184,64 @@ var App = function() {
 
         console.log('plinth rotation', plinth.rotation);
 
+        // Figure out which duck and write approprite equation
+
+        var rightEquation = '';
+
+        if( duck1.position.z < 1 ) {
+            var dist = $('#dist1').html();
+            dist = dist.substring(0, dist.length - 1);
+            rightEquation += '4 x ' + dist + ' = ' + (4 * dist);
+        }
+        if( duck3.position.z < 1 ) {
+            if( rightEquation ) rightEquation += ' + ';
+            var dist = $('#dist3').html();
+            dist = dist.substring(0, dist.length - 1);
+            rightEquation += '2 x ' + dist + ' = ' + (2 * dist);
+        }
+        if( duck4.position.z < 1 ) {
+            if( rightEquation ) rightEquation += ' + ';
+            var dist = $('#dist4').html();
+            dist = dist.substring(0, dist.length - 1);
+            rightEquation += '1 x ' + dist + ' = ' + dist;
+        }
+
+        $('#win .right').html(rightEquation);
+        $('#lose .right').html(rightEquation);
+
         if( plinth.rotation.z >= -0.15 && plinth.rotation.z <= 0.15 ) {
 
             // Win!
 
-            alert( 'Win!' );
+            $('#win').fadeIn('fast');
 
         } else {
 
             // Fail!
-            alert( 'Bad luck!' );
+            $('#lose').fadeIn('fast');
 
         }
+
+        window.setTimeout(function() {
+
+            reset();
+
+        }, 10000);
+
+    }
+
+    function reset() {
+
+        $('#win').hide();
+        $('#lose').hide();
+
+        /*
+        scene.remove(duck1);
+        scene.remove(duck2);
+        scene.remove(duck3);
+        scene.remove(duck4);
+        */
+
 
     }
 
