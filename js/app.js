@@ -914,7 +914,7 @@ var App = function() {
                 //var labelYDiff = selectedItem.label.position.y - selectedItem.model.position.y;
 
                 selectedItem.model.position.x = fingerPos.x;
-                selectedItem.model.position.y = fingerPos.y;
+                selectedItem.model.position.y = Math.min(fingerPos.y, selectedItem.weight + 10);
                 selectedItem.model.position.z = fingerPos.z;
 
                 selectedItem.model.__dirtyPosition = true;
