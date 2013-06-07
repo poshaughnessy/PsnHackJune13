@@ -315,11 +315,9 @@ var App = function() {
 
             //var material = new THREE.MeshBasicMaterial({color: 0xFFFF66});
 
-            duck1 = new Physijs.BoxMesh( geometry, material, 5 );
+            duck1 = new Physijs.BoxMesh( geometry, material, 4 );
 
             duck1.scale.set(4, 4, 4);
-
-            //duck1.position.set( -10, 20, 0 );
 
             duck1.position.set( -21, 5.95, 25 );
 
@@ -367,14 +365,14 @@ var App = function() {
                     .1 // low restitution
             );
 
-            duck2 = new Physijs.BoxMesh( geometry, material, 1 );
+            duck2 = new Physijs.BoxMesh( geometry, material, 3 );
 
             duck2.scale.set(3, 3, 3);
 
             // XXX above balance
-            //duck2.position.set( 14, 13, 0 );
+            duck2.position.set( -18, 13, 0 );
 
-            duck2.position.set( -6, 4.6, 25 );
+            //duck2.position.set( -6, 4.6, 25 );
 
             duck2.rotation.y = Math.PI * 1/8;
 
@@ -420,12 +418,9 @@ var App = function() {
                     .1 // low restitution
             );
 
-            duck3 = new Physijs.BoxMesh( geometry, material, 1 );
+            duck3 = new Physijs.BoxMesh( geometry, material, 2 );
 
             duck3.scale.set(2, 2, 2);
-
-            // XXX above balance
-            //duck3.position.set( 14, 13, 0 );
 
             duck3.position.set( 7, 3.2, 25 );
 
@@ -472,7 +467,7 @@ var App = function() {
 
             //var material = new THREE.MeshBasicMaterial({color: 0xFFFF66});
 
-            duck4 = new Physijs.BoxMesh( geometry, material, 5 );
+            duck4 = new Physijs.BoxMesh( geometry, material, 1 );
 
             duck4.scale.set(1, 1, 1);
 
