@@ -7,14 +7,15 @@
                                           __/ |    
                                          |___/     
 
-DucksPhys is a 3D mini game aimed at 7-12 year-olds that teaches them the concepts of physics. 
-Students can explore the laws of physics by balancing weights in form of ducks using their hand 
-gestures which are being read by the Leap Motion Controller.
+DucksPhys is a 3D mini game aimed at 7-12 year-olds that teaches them the 
+concepts of physics. Students can explore the laws of physics by balancing 
+weights in form of ducks using their hand gestures which are being read by 
+the Leap Motion Controller.
 
 DucksPhys - Balancing physics with fun!
 
 Check out the demo at: http://www.youtube.com/watch?v=wKcT2Rz5ZNI
 
-
-Please note this is a hackathon entry created in less than 2 days - so the code's very messy!
-Sorry about that. Maybe I'll get round to cleaning it up sometime...
+Please note this is a hackathon entry created in less than 2 days - so the 
+code's very messy! Sorry about that. Maybe I'll get round to cleaning it 
+up one day...
